@@ -1,2 +1,2 @@
 # ireturn
-Accept Interfaces, Return Structs
+Accept Interfaces, Return Concrete Types
