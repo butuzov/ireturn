@@ -9,5 +9,16 @@ build:
 	@ go build -trimpath -o bin/ireturn ./cmd/ireturn/
 
 tests:
-	go test -v -count=1 -race -covermode=atomic \
+	go test -v -count=1 -race \
+		-failfast \
+		-run '^TestAll*$$' \
+		-parallel=16 \
+		-timeout=1m \
+		-covermode=atomic \
 		-coverpkg=$(GOPKGS) -coverprofile=coverage.cov ./...
+
+lints:
+	golangci-lint run --no-config  ./...
+
+cover:
+	go tool cover -html=coverage.cov

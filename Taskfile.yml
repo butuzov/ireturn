@@ -1,0 +1,13 @@
+version: '3'
+
+tasks:
+  default:
+    sources:
+    - "./**/*.go"
+    method: timestamp
+    cmds:
+    - clear
+    - make build
+    - ls -lah bin/ireturn
+    - make tests
+    - make lints
