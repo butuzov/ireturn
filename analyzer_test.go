@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"golang.org/x/tools/go/analysis/analysistest"
 )
 
@@ -14,9 +15,24 @@ func TestAll(t *testing.T) {
 	//
 	tests = append(tests, testCase{
 		name: "Empty Package With No Issues",
-		mask: "hello-world*",
+		mask: "hello-world.go",
 	})
 	//
+	tests = append(tests, testCase{
+		name: "Empty Interface Return",
+		mask: "empty_interface.go",
+		want: []string{
+			"fooInterface returns interface (interface{})",
+		},
+	})
+
+	tests = append(tests, testCase{
+		name: "Anonymouse Interface",
+		mask: "anonymouse_interafce.go",
+		want: []string{
+			"NewAnonymouseInterface returns interface (anonymouse interface)",
+		},
+	})
 
 	for _, tt := range tests {
 		t.Run(tt.name, tt.test())
@@ -33,7 +49,7 @@ func (t *fakeTest) Errorf(format string, args ...interface{}) {}
 type testCase struct {
 	name string
 	mask string // file mask
-	want []*analysistest.Result
+	want []string
 }
 
 func (tc testCase) test() func(*testing.T) {
@@ -52,7 +68,15 @@ func (tc testCase) test() func(*testing.T) {
 		results := analysistest.Run(&fakeTest{}, dir, NewAnalyzer())
 
 		// ------------------------------------------------------------ results ----
-		assert(t, len(tc.want) == len(results[0].Diagnostics), "unexpected results")
+
+		var tmp []string
+		for _, d := range results[0].Diagnostics {
+			tmp = append(tmp, d.Message)
+		}
+
+		if diff := cmp.Diff(tc.want, tmp); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
+		}
 	}
 }
 
@@ -75,11 +99,13 @@ func (tc testCase) xerox(dest string) error {
 	return nil
 }
 
-func assert(t *testing.T, condHappend bool, msg string, args ...interface{}) {
+//nolint: unused, deadcode //
+func assert(t *testing.T, condHappend bool, msg string, args ...interface{}) bool {
 	t.Helper()
 	if condHappend {
-		return
+		return true
 	}
 
 	t.Errorf(msg, args...)
+	return false
 }
