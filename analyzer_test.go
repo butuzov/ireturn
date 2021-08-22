@@ -53,6 +53,16 @@ func TestAll(t *testing.T) {
 			"newErrorInterface returns interface (error)",
 		},
 	})
+
+	tests = append(tests, testCase{
+		name: "Named Interface",
+		mask: "named_*.go",
+		want: []string{
+			"newIDoer returns interface (example.iDoer)",
+			"NewNamedStruct returns interface (example.FooerBarer)",
+		},
+	})
+
 	for _, tt := range tests {
 		t.Run(tt.name, tt.test())
 	}
@@ -74,20 +84,21 @@ type testCase struct {
 func (tc testCase) test() func(*testing.T) {
 	return func(t *testing.T) {
 		// -------------------------------------------------------------- setup ----
-		dir := t.TempDir()
-		t.Cleanup(func() {
-			_ = os.RemoveAll(dir)
-		})
+		goroot, dir, err := directory(t)
+		if err != nil {
+			t.Error(err)
+		}
 
 		if err := cp("go.mod", dir); err != nil {
 			t.Error(err)
 		}
+
 		if err := tc.xerox(dir); err != nil {
 			t.Error(err)
 		}
 
 		// --------------------------------------------------------------- test ----
-		results := analysistest.Run(&fakeTest{}, dir, NewAnalyzer())
+		results := analysistest.Run(&fakeTest{}, goroot, NewAnalyzer(), "example")
 
 		// ------------------------------------------------------------ results ----
 
@@ -100,6 +111,19 @@ func (tc testCase) test() func(*testing.T) {
 			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	}
+}
+
+func directory(t *testing.T) (goroot, dir string, err error) {
+	t.Helper()
+
+	goroot = t.TempDir()
+	dir = filepath.Join(goroot, "src/example")
+
+	if err := os.MkdirAll(dir, 0777); err != nil {
+		return "", "", err
+	}
+
+	return goroot, dir, nil
 }
 
 func (tc testCase) xerox(dest string) error {

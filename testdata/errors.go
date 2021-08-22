@@ -1,4 +1,4 @@
-package testdata
+package example
 
 func errorReturn() error {
 	return nil

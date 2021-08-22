@@ -1,4 +1,4 @@
-package testdata
+package example
 
 /*
 	Actual disallow directive.

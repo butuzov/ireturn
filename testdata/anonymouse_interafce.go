@@ -1,4 +1,4 @@
-package testdata
+package example
 
 type _t_anon_interface int
 

@@ -94,8 +94,11 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []iface {
 				continue
 			}
 
-			// TODO(butuzov): named returns.
-
+			results = append(results, iface{
+				name: word,
+				pos:  pos,
+				t:    typeNamedInterface,
+			})
 		// -----
 		default:
 			_ = v
