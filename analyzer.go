@@ -2,6 +2,7 @@ package ireturn
 
 import (
 	"go/ast"
+	"go/types"
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
@@ -73,6 +74,27 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []iface {
 				pos:  pos,
 				t:    typeAnonInterface,
 			})
+
+		case *ast.Ident:
+
+			t1 := pass.TypesInfo.TypeOf(el.Type)
+			if !types.IsInterface(t1.Underlying()) {
+				continue
+			}
+
+			word := t1.String()
+
+			// only build in interface is error
+			if obj := types.Universe.Lookup(word); obj != nil {
+				results = append(results, iface{
+					name: obj.Name(),
+					pos:  pos,
+					t:    typeErrorInterface,
+				})
+				continue
+			}
+
+			// TODO(butuzov): named returns.
 
 		// -----
 		default:

@@ -43,6 +43,16 @@ func TestAll(t *testing.T) {
 		},
 	})
 
+	tests = append(tests, testCase{
+		name: "Error Interface return",
+		mask: "errors.go",
+		want: []string{
+			"errorReturn returns interface (error)",
+			"errorAliasReturn returns interface (error)",
+			"errorTypeReturn returns interface (error)",
+			"newErrorInterface returns interface (error)",
+		},
+	})
 	for _, tt := range tests {
 		t.Run(tt.name, tt.test())
 	}
@@ -69,6 +79,9 @@ func (tc testCase) test() func(*testing.T) {
 			_ = os.RemoveAll(dir)
 		})
 
+		if err := cp("go.mod", dir); err != nil {
+			t.Error(err)
+		}
 		if err := tc.xerox(dir); err != nil {
 			t.Error(err)
 		}
@@ -96,13 +109,21 @@ func (tc testCase) xerox(dest string) error {
 	}
 
 	for _, file := range matches {
-		if location, err := filepath.Abs(file); err != nil {
-			return err
-		} else if data, err := ioutil.ReadFile(location); err != nil {
-			return err
-		} else if err := ioutil.WriteFile(filepath.Join(dest, filepath.Base(file)), data, 0600); err != nil {
+		if err := cp(file, dest); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func cp(src, dst string) error {
+	if location, err := filepath.Abs(src); err != nil {
+		return err
+	} else if data, err := ioutil.ReadFile(location); err != nil {
+		return err
+	} else if err := ioutil.WriteFile(filepath.Join(dst, filepath.Base(src)), data, 0600); err != nil {
+		return err
 	}
 
 	return nil

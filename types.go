@@ -5,6 +5,7 @@ type itype int
 const (
 	typeEmptyInterface itype = 1 << iota
 	typeAnonInterface
+	typeErrorInterface
 )
 
 type iface struct {
