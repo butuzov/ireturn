@@ -34,6 +34,15 @@ func TestAll(t *testing.T) {
 		},
 	})
 
+	tests = append(tests, testCase{
+		name: "Correct Disallow Directive",
+		mask: "disallow_directive_ok.go",
+		want: []string{
+			"dissAllowDirective2 returns interface (interface{})",
+			"dissAllowDirective6 returns interface (interface{})",
+		},
+	})
+
 	for _, tt := range tests {
 		t.Run(tt.name, tt.test())
 	}
