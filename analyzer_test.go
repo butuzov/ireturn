@@ -4,23 +4,29 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/tools/go/analysis/analysistest"
 )
 
+const testPackageName = "example"
+
 func TestAll(t *testing.T) {
 	tests := []testCase{}
 	//
 	tests = append(tests, testCase{
 		name: "Empty Package With No Issues",
-		mask: "hello-world.go",
+		mask: []string{
+			"hello-world.go",
+			"go.*",
+		},
 	})
 	//
 	tests = append(tests, testCase{
 		name: "Empty Interface Return",
-		mask: "empty_interface.go",
+		mask: []string{"empty_interface.go", "go.*"},
 		want: []string{
 			"fooInterface returns interface (interface{})",
 		},
@@ -28,7 +34,7 @@ func TestAll(t *testing.T) {
 
 	tests = append(tests, testCase{
 		name: "Anonymouse Interface",
-		mask: "anonymouse_interafce.go",
+		mask: []string{"anonymouse_interafce.go", "go.*"},
 		want: []string{
 			"NewAnonymouseInterface returns interface (anonymouse interface)",
 		},
@@ -36,7 +42,7 @@ func TestAll(t *testing.T) {
 
 	tests = append(tests, testCase{
 		name: "Correct Disallow Directive",
-		mask: "disallow_directive_ok.go",
+		mask: []string{"disallow_directive_ok.go", "go.*"},
 		want: []string{
 			"dissAllowDirective2 returns interface (interface{})",
 			"dissAllowDirective6 returns interface (interface{})",
@@ -45,7 +51,7 @@ func TestAll(t *testing.T) {
 
 	tests = append(tests, testCase{
 		name: "Error Interface return",
-		mask: "errors.go",
+		mask: []string{"errors.go", "go.*"},
 		want: []string{
 			"errorReturn returns interface (error)",
 			"errorAliasReturn returns interface (error)",
@@ -54,12 +60,18 @@ func TestAll(t *testing.T) {
 		},
 	})
 
+	// because of https://github.com/golang/go/issues/37054
+	// we not going to import external modules in tests,
+	// but rather create new ones that are "external"
 	tests = append(tests, testCase{
 		name: "Named Interface",
-		mask: "named_*.go",
+		mask: []string{"named_*.go", "github.com/foo/bar/*"},
 		want: []string{
+			"s returns interface (github.com/foo/bar.Buzzer)",
+			"New returns interface (github.com/foo/bar.Buzzer)",
 			"newIDoer returns interface (example.iDoer)",
 			"NewNamedStruct returns interface (example.FooerBarer)",
+			"NamedContext returns interface (context.Context)",
 		},
 	})
 
@@ -75,30 +87,27 @@ type fakeTest struct{}
 func (t *fakeTest) Errorf(format string, args ...interface{}) {}
 
 // ---------------------------------------------------------- test case --------
+
 type testCase struct {
 	name string
-	mask string // file mask
+	mask []string // file mask
 	want []string
 }
 
 func (tc testCase) test() func(*testing.T) {
 	return func(t *testing.T) {
 		// -------------------------------------------------------------- setup ----
-		goroot, dir, err := directory(t)
+		goroot, srcdir, err := directory(t)
 		if err != nil {
 			t.Error(err)
 		}
 
-		if err := cp("go.mod", dir); err != nil {
-			t.Error(err)
-		}
-
-		if err := tc.xerox(dir); err != nil {
+		if err := tc.xerox(srcdir); err != nil {
 			t.Error(err)
 		}
 
 		// --------------------------------------------------------------- test ----
-		results := analysistest.Run(&fakeTest{}, goroot, NewAnalyzer(), "example")
+		results := analysistest.Run(&fakeTest{}, goroot, NewAnalyzer(), testPackageName)
 
 		// ------------------------------------------------------------ results ----
 
@@ -113,28 +122,45 @@ func (tc testCase) test() func(*testing.T) {
 	}
 }
 
-func directory(t *testing.T) (goroot, dir string, err error) {
+func directory(t *testing.T) (goroot, srcdir string, err error) {
 	t.Helper()
 
 	goroot = t.TempDir()
-	dir = filepath.Join(goroot, "src/example")
+	srcdir = filepath.Join(goroot, "src")
 
-	if err := os.MkdirAll(dir, 0777); err != nil {
+	if err := os.MkdirAll(srcdir, 0777); err != nil {
 		return "", "", err
 	}
 
-	return goroot, dir, nil
+	return goroot, srcdir, nil
 }
 
-func (tc testCase) xerox(dest string) error {
-	matches, err := filepath.Glob("testdata/" + tc.mask)
-	if err != nil {
-		return err
-	}
+func (tc testCase) xerox(root string) error {
+	for _, mask := range tc.mask {
 
-	for _, file := range matches {
-		if err := cp(file, dest); err != nil {
+		files, err := filepath.Glob("testdata/" + mask)
+		if err != nil {
 			return err
+		}
+
+		for _, file := range files {
+			// directory
+			isInSubDir := strings.Count(file, "/") > 1
+			directory := testPackageName
+			if isInSubDir {
+				// cut off suffix & prefix
+				directory = file[len("testdata")+1 : len(file)-len(filepath.Base(file))-1]
+			}
+
+			// create if no exists
+			if err := os.MkdirAll(filepath.Join(root, directory), 0777); err != nil {
+				return err
+			}
+
+			// copy
+			if err := cp(file, filepath.Join(root, directory)); err != nil {
+				return err
+			}
 		}
 	}
 

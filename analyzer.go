@@ -66,6 +66,7 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []iface {
 					pos:  pos,
 					t:    typeEmptyInterface,
 				})
+
 				continue
 			}
 
@@ -91,6 +92,7 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []iface {
 					pos:  pos,
 					t:    typeErrorInterface,
 				})
+
 				continue
 			}
 
@@ -99,6 +101,22 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []iface {
 				pos:  pos,
 				t:    typeNamedInterface,
 			})
+
+		case *ast.SelectorExpr:
+
+			t1 := pass.TypesInfo.TypeOf(el.Type)
+			if !types.IsInterface(t1.Underlying()) {
+				continue
+			}
+
+			word := t1.String()
+
+			results = append(results, iface{
+				name: word,
+				pos:  pos,
+				t:    typeNamedInterface,
+			})
+
 		// -----
 		default:
 			_ = v
@@ -141,7 +159,6 @@ func disallowDirectiveFound(cg *ast.CommentGroup) bool {
 			}
 			startingIdx += idx + 1
 		}
-
 	}
 
 	return false
