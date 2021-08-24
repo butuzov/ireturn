@@ -16,7 +16,7 @@ trim_trailing_whitespace = true            # no extra sapces at the end of lines
 indent_style = tab
 indent_size = 2
 
-[{Makefile,makefile}]                     # CMake
+[{Makefile,makefile}]                      # CMake
 indent_style = tab
 
 [*.md]                                     # Markdown
