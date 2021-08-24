@@ -18,7 +18,7 @@ tests:
 		-coverpkg=$(GOPKGS) -coverprofile=coverage.cov ./...
 
 lints:
-	golangci-lint run --no-config  ./...
+	golangci-lint run --no-config ./... -D deadcode
 
 cover:
 	go tool cover -html=coverage.cov
