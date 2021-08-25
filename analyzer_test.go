@@ -65,10 +65,11 @@ func TestAll(t *testing.T) {
 	// but rather create new ones that are "external"
 	tests = append(tests, testCase{
 		name: "Named Interface",
-		mask: []string{"named_*.go", "github.com/foo/bar/*"},
+		mask: []string{"named_*.go", "github.com/foo/bar/*", "internal/sample/*"},
 		want: []string{
 			"s returns interface (github.com/foo/bar.Buzzer)",
 			"New returns interface (github.com/foo/bar.Buzzer)",
+			"NewDeclared returns interface (internal/sample.Doer)",
 			"newIDoer returns interface (example.iDoer)",
 			"NewNamedStruct returns interface (example.FooerBarer)",
 			"NamedContext returns interface (context.Context)",
