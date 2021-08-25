@@ -1,6 +1,7 @@
 package ireturn
 
 import (
+	"fmt"
 	"go/ast"
 	"go/types"
 	"strings"
@@ -14,41 +15,51 @@ const nolintPrefix = "//nolint" // used for dissallow comments
 
 const name string = "ireturn"
 
-func NewAnalyzer() *analysis.Analyzer {
+func NewAnalyzerWithConfig(config Config) *analysis.Analyzer {
 	return &analysis.Analyzer{
 		Name:     name,
 		Doc:      "Accept Interfaces, Return Concrete Types",
-		Run:      run,
+		Run:      run(config),
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
 	}
 }
 
-func run(pass *analysis.Pass) (interface{}, error) {
-	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
-
-	inspect.Preorder([]ast.Node{(*ast.FuncDecl)(nil)}, wrapChecker(pass))
-
-	return nil, nil
+func NewAnalyzer() *analysis.Analyzer {
+	return NewAnalyzerWithConfig(NewDefaultConfig())
 }
 
-func wrapChecker(pass *analysis.Pass) func(ast.Node) {
-	return func(node ast.Node) {
-		//nolint: forcetypeassert // (that's ok, we filtering out non func in the inspect.Preorder).
-		f := node.(*ast.FuncDecl)
+func run(config Config) func(*analysis.Pass) (interface{}, error) {
+	return func(pass *analysis.Pass) (interface{}, error) {
+		var issues []analysis.Diagnostic
 
-		// 02. Does it return any results ?
-		if f.Type == nil || f.Type.Results == nil {
-			return
+		ins, _ := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+		ins.Preorder([]ast.Node{(*ast.FuncDecl)(nil)}, func(node ast.Node) {
+			//
+			f, _ := node.(*ast.FuncDecl)
+
+			// 02. Does it return any results ?
+			if f.Type == nil || f.Type.Results == nil {
+				return
+			}
+
+			// 02. Is it allowed to be checked?
+			if hasDisallowDirective(f.Doc) {
+				return
+			}
+
+			for _, i := range filterInterfaces(pass, f.Type.Results) {
+				issues = append(issues, analysis.Diagnostic{
+					Pos:     f.Pos(),
+					Message: fmt.Sprintf("%s returns interface (%s)", f.Name.Name, i.name),
+				})
+			}
+		})
+
+		for i := range issues {
+			pass.Report(issues[i])
 		}
 
-		// 02. Is it allowed to be checked?
-		if hasDisallowDirective(f.Doc) {
-			return
-		}
-
-		for _, i := range filterInterfaces(pass, f.Type.Results) {
-			pass.Reportf(f.Pos(), "%s returns interface (%s)", f.Name.Name, i.name)
-		}
+		return nil, nil
 	}
 }
 
@@ -61,20 +72,11 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []iface {
 		case *ast.InterfaceType:
 
 			if len(v.Methods.List) == 0 {
-				results = append(results, iface{
-					name: "interface{}",
-					pos:  pos,
-					t:    typeEmptyInterface,
-				})
-
+				results = append(results, issue("interface{}", pos, typeEmptyInterface))
 				continue
 			}
 
-			results = append(results, iface{
-				name: "anonymouse interface",
-				pos:  pos,
-				t:    typeAnonInterface,
-			})
+			results = append(results, issue("anonymouse interface", pos, typeAnonInterface))
 
 		case *ast.Ident:
 
@@ -87,20 +89,11 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []iface {
 
 			// only build in interface is error
 			if obj := types.Universe.Lookup(word); obj != nil {
-				results = append(results, iface{
-					name: obj.Name(),
-					pos:  pos,
-					t:    typeErrorInterface,
-				})
-
+				results = append(results, issue(obj.Name(), pos, typeErrorInterface))
 				continue
 			}
 
-			results = append(results, iface{
-				name: word,
-				pos:  pos,
-				t:    typeNamedInterface,
-			})
+			results = append(results, issue(word, pos, typeNamedInterface))
 
 		case *ast.SelectorExpr:
 
@@ -109,13 +102,7 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []iface {
 				continue
 			}
 
-			word := t1.String()
-
-			results = append(results, iface{
-				name: word,
-				pos:  pos,
-				t:    typeNamedInterface,
-			})
+			results = append(results, issue(t1.String(), pos, typeNamedInterface))
 
 		// -----
 		default:
