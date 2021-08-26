@@ -15,17 +15,18 @@ const testPackageName = "example"
 
 func TestAll(t *testing.T) {
 	tests := []testCase{}
-	//
+
 	tests = append(tests, testCase{
-		name: "Empty Package With No Issues",
+		name: "zero val config: Empty Package With No Issues",
 		mask: []string{
 			"hello-world.go",
 			"go.*",
 		},
+		want: []string{},
 	})
-	//
+
 	tests = append(tests, testCase{
-		name: "Empty Interface Return",
+		name: "zero val config: Empty Interface",
 		mask: []string{"empty_interface.go", "go.*"},
 		want: []string{
 			"fooInterface returns interface (interface{})",
@@ -33,7 +34,29 @@ func TestAll(t *testing.T) {
 	})
 
 	tests = append(tests, testCase{
-		name: "Anonymouse Interface",
+		name: "allow: Empty Interface",
+		mask: []string{"empty_interface.go", "go.*"},
+		config: Config{
+			Action: Allow,
+			List:   []string{"empty"},
+		},
+		want: []string{},
+	})
+
+	tests = append(tests, testCase{
+		name: "reject: Empty Interface",
+		mask: []string{"empty_interface.go", "go.*"},
+		config: Config{
+			Action: Reject,
+			List:   []string{"empty"},
+		},
+		want: []string{
+			"fooInterface returns interface (interface{})",
+		},
+	})
+
+	tests = append(tests, testCase{
+		name: "zero_val_config: Anonymouse Interface",
 		mask: []string{"anonymouse_interafce.go", "go.*"},
 		want: []string{
 			"NewAnonymouseInterface returns interface (anonymouse interface)",
@@ -41,7 +64,29 @@ func TestAll(t *testing.T) {
 	})
 
 	tests = append(tests, testCase{
-		name: "Correct Disallow Directive",
+		name: "allow: Anonymouse Interface",
+		mask: []string{"anonymouse_interafce.go", "go.*"},
+		want: []string{}, // no errors expected as anon interfaces are allowed
+		config: Config{
+			Action: Allow,
+			List:   []string{"anon"},
+		},
+	})
+
+	tests = append(tests, testCase{
+		name: "reject: Anonymouse Interface",
+		mask: []string{"anonymouse_interafce.go", "go.*"},
+		want: []string{
+			"NewAnonymouseInterface returns interface (anonymouse interface)",
+		},
+		config: Config{
+			Action: Reject,
+			List:   []string{"anon"},
+		},
+	})
+
+	tests = append(tests, testCase{
+		name: "zero_val_config: Correct Disallow Directive",
 		mask: []string{"disallow_directive_ok.go", "go.*"},
 		want: []string{
 			"dissAllowDirective2 returns interface (interface{})",
@@ -50,7 +95,7 @@ func TestAll(t *testing.T) {
 	})
 
 	tests = append(tests, testCase{
-		name: "Error Interface return",
+		name: "zero_val_config: Error Interface return",
 		mask: []string{"errors.go", "go.*"},
 		want: []string{
 			"errorReturn returns interface (error)",
@@ -60,11 +105,36 @@ func TestAll(t *testing.T) {
 		},
 	})
 
-	// because of https://github.com/golang/go/issues/37054
-	// we not going to import external modules in tests,
-	// but rather create new ones that are "external"
 	tests = append(tests, testCase{
-		name: "Named Interface",
+		name: "allow: Error Interface return",
+		mask: []string{"errors.go", "go.*"},
+		config: Config{
+			Action: Allow,
+			List:   []string{"error"},
+		},
+		want: []string{},
+	})
+
+	tests = append(tests, testCase{
+		name: "reject: Error Interface return",
+		mask: []string{"errors.go", "go.*"},
+		config: Config{
+			Action: Reject,
+			List:   []string{"error"},
+		},
+		want: []string{
+			"errorReturn returns interface (error)",
+			"errorAliasReturn returns interface (error)",
+			"errorTypeReturn returns interface (error)",
+			"newErrorInterface returns interface (error)",
+		},
+	})
+
+	// because of https://github.com/golang/go/issues/37054
+	// we not going (we can't) import external modules in our tests,
+	// but rather we will create new ones that are "external"
+	tests = append(tests, testCase{
+		name: "(zero) Named Interface",
 		mask: []string{"named_*.go", "github.com/foo/bar/*", "internal/sample/*"},
 		want: []string{
 			"s returns interface (github.com/foo/bar.Buzzer)",
@@ -73,6 +143,36 @@ func TestAll(t *testing.T) {
 			"newIDoer returns interface (example.iDoer)",
 			"NewNamedStruct returns interface (example.FooerBarer)",
 			"NamedContext returns interface (context.Context)",
+		},
+	})
+
+	tests = append(tests, testCase{
+		name: "default config With All Files",
+		mask: []string{"*.go", "github.com/foo/bar/*", "internal/sample/*"},
+		want: []string{
+			"s returns interface (github.com/foo/bar.Buzzer)",
+			"New returns interface (github.com/foo/bar.Buzzer)",
+			"NewDeclared returns interface (internal/sample.Doer)",
+			"newIDoer returns interface (example.iDoer)",
+			"NewNamedStruct returns interface (example.FooerBarer)",
+			"NamedContext returns interface (context.Context)",
+		},
+		config: NewDefaultConfig(),
+	})
+
+	// todo(butuzov): replace after adding named.
+	tests = append(tests, testCase{
+		name: "temp: reject all errors",
+		mask: []string{"*.go", "github.com/foo/bar/*", "internal/sample/*"},
+		want: []string{
+			"errorReturn returns interface (error)",
+			"errorAliasReturn returns interface (error)",
+			"errorTypeReturn returns interface (error)",
+			"newErrorInterface returns interface (error)",
+		},
+		config: Config{
+			Action: Reject,
+			List:   []string{"error"},
 		},
 	})
 
@@ -90,13 +190,15 @@ func (t *fakeTest) Errorf(format string, args ...interface{}) {}
 // ---------------------------------------------------------- test case --------
 
 type testCase struct {
-	name string
-	mask []string // file mask
-	want []string
+	name   string
+	config Config
+	mask   []string // file mask
+	want   []string
 }
 
 func (tc testCase) test() func(*testing.T) {
 	return func(t *testing.T) {
+		t.Parallel()
 		// -------------------------------------------------------------- setup ----
 		goroot, srcdir, err := directory(t)
 		if err != nil {
@@ -108,11 +210,12 @@ func (tc testCase) test() func(*testing.T) {
 		}
 
 		// --------------------------------------------------------------- test ----
-		results := analysistest.Run(&fakeTest{}, goroot, NewAnalyzer(), testPackageName)
+		results := analysistest.Run(
+			&fakeTest{}, goroot, NewAnalyzerWithConfig(tc.config), testPackageName)
 
 		// ------------------------------------------------------------ results ----
 
-		var tmp []string
+		tmp := []string{}
 		for _, d := range results[0].Diagnostics {
 			tmp = append(tmp, d.Message)
 		}
@@ -180,7 +283,7 @@ func cp(src, dst string) error {
 	return nil
 }
 
-//nolint: unused, deadcode //
+//nolint: unused
 func assert(t *testing.T, condHappend bool, msg string, args ...interface{}) bool {
 	t.Helper()
 	if condHappend {

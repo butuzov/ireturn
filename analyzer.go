@@ -48,6 +48,15 @@ func run(config Config) func(*analysis.Pass) (interface{}, error) {
 			}
 
 			for _, i := range filterInterfaces(pass, f.Type.Results) {
+
+				if config.Action == Allow && config.Has(i) {
+					continue
+				}
+
+				if config.Action == Reject && !config.Has(i) {
+					continue
+				}
+
 				issues = append(issues, analysis.Diagnostic{
 					Pos:     f.Pos(),
 					Message: fmt.Sprintf("%s returns interface (%s)", f.Name.Name, i.name),

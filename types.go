@@ -1,12 +1,20 @@
 package ireturn
 
-type itype int
+type itype uint8
 
 const (
-	typeEmptyInterface itype = 1 << iota
-	typeAnonInterface
-	typeErrorInterface
-	typeNamedInterface
+	typeEmptyInterface itype = 1 << iota // ref as empty
+	typeAnonInterface                    // ref as anon
+	typeErrorInterface                   // ref as error
+	typeNamedInterface                   // ref as named
+)
+
+const (
+	nameEmpty = "empty"
+	nameAnon  = "anon"
+	nameError = "error"
+	// TODO(butuzov): pic stdlib interfaces
+	// nameStdLib = "stdlib"
 )
 
 type iface struct {

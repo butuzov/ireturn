@@ -9,5 +9,8 @@ tasks:
     - clear
     - make build
     - ls -lah bin/ireturn
+    # - task: testcase
+    #   vars: {Case: "zero:_Empty_Package_With_No_Issues"}
     - make tests
     - make lints
+  testcase: go test -v -failfast -count=1 -run "TestAll/{{ .Case }}" ./...
