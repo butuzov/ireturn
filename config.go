@@ -1,5 +1,9 @@
 package ireturn
 
+import (
+	"regexp"
+)
+
 // you can use either allow or reject
 // you can allow standard library + some extra stuff to be used (error / interface)
 
@@ -19,6 +23,7 @@ type Config struct {
 	// private fields (for search optimization look ups)
 	init  bool
 	quick uint8
+	list  []*regexp.Regexp
 }
 
 func NewDefaultConfig() Config {
@@ -42,6 +47,18 @@ func (config *Config) Has(i iface) bool {
 	if config.quick&uint8(i.t) > 0 {
 		return true
 	}
+
+	// not a named interface (because error, interface{}, anon interface has keywords.)
+	if i.t&typeNamedInterface == 0 {
+		return false
+	}
+
+	for _, re := range config.list {
+		if re.MatchString(i.name) {
+			return true
+		}
+	}
+
 	return false
 }
 
@@ -60,6 +77,11 @@ func (config *Config) compileList() {
 			config.quick |= uint8(typeNamedStdInterface)
 		}
 
+		// allow to parse regular expressions
 		// todo(butuzov): how can we log error in golangci-lint?
+		if re, err := regexp.Compile(str); err == nil {
+			config.list = append(config.list, re)
+		}
+
 	}
 }

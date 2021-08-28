@@ -148,7 +148,36 @@ func TestAll(t *testing.T) {
 	})
 
 	tests = append(tests, testCase{
-		name: "default config With All Files",
+		name: "named: allow regexps (package)",
+		mask: []string{"*.go", "github.com/foo/bar/*", "internal/sample/*"},
+		want: []string{
+			"s returns interface (github.com/foo/bar.Buzzer)",
+			"New returns interface (github.com/foo/bar.Buzzer)",
+		},
+		config: Config{
+			Action: Reject,
+			List: []string{
+				"github.com/foo/bar",
+			},
+		},
+	})
+
+	tests = append(tests, testCase{
+		name: "named: allow regexps (interface)",
+		mask: []string{"*.go", "github.com/foo/bar/*", "internal/sample/*"},
+		want: []string{
+			"NewDeclared returns interface (internal/sample.Doer)",
+		},
+		config: Config{
+			Action: Reject,
+			List: []string{
+				"\\.Doer", // allow us to match .Doer but not iDoer
+			},
+		},
+	})
+
+	tests = append(tests, testCase{
+		name: "default_config: all",
 		mask: []string{"*.go", "github.com/foo/bar/*", "internal/sample/*"},
 		want: []string{
 			"s returns interface (github.com/foo/bar.Buzzer)",
@@ -184,7 +213,7 @@ func TestAll(t *testing.T) {
 		},
 	})
 	tests = append(tests, testCase{
-		name: "allow: stdlib",
+		name: "reject: stdlib",
 		mask: []string{"*.go", "github.com/foo/bar/*", "internal/sample/*"},
 		want: []string{
 			"NamedContext returns interface (context.Context)",
