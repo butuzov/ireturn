@@ -11,7 +11,6 @@ build:
 tests:
 	go test -v -count=1 -race \
 		-failfast \
-		-run '^TestAll*$$' \
 		-parallel=16 \
 		-timeout=1m \
 		-covermode=atomic \

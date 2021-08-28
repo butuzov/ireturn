@@ -95,7 +95,6 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []iface {
 			}
 
 			word := t1.String()
-
 			// only build in interface is error
 			if obj := types.Universe.Lookup(word); obj != nil {
 				results = append(results, issue(obj.Name(), pos, typeErrorInterface))
@@ -111,7 +110,13 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []iface {
 				continue
 			}
 
-			results = append(results, issue(t1.String(), pos, typeNamedInterface))
+			word := t1.String()
+			if isStdLib(word) {
+				results = append(results, issue(word, pos, typeNamedStdInterface))
+				continue
+			}
+
+			results = append(results, issue(word, pos, typeNamedInterface))
 
 		// -----
 		default:
@@ -121,6 +126,27 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []iface {
 	}
 
 	return results
+}
+
+// isStdLib will run small checks against pkg to find out if it comes from
+// a standard library or not.
+func isStdLib(named string) bool {
+	pkg := strings.Split(named, ".")
+
+	//nolint: gomnd
+	if len(pkg) != 2 {
+		// silently return false insted of the panic.
+		// if its not 2, its not standard lib.
+		return false
+	}
+
+	for _, lib := range std {
+		if lib == pkg[0] {
+			return true
+		}
+	}
+
+	return false
 }
 
 func hasDisallowDirective(cg *ast.CommentGroup) bool {

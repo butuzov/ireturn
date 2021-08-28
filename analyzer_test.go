@@ -134,7 +134,7 @@ func TestAll(t *testing.T) {
 	// we not going (we can't) import external modules in our tests,
 	// but rather we will create new ones that are "external"
 	tests = append(tests, testCase{
-		name: "(zero) Named Interface",
+		name: "zero_val_config: Named Interface",
 		mask: []string{"named_*.go", "github.com/foo/bar/*", "internal/sample/*"},
 		want: []string{
 			"s returns interface (github.com/foo/bar.Buzzer)",
@@ -143,6 +143,7 @@ func TestAll(t *testing.T) {
 			"newIDoer returns interface (example.iDoer)",
 			"NewNamedStruct returns interface (example.FooerBarer)",
 			"NamedContext returns interface (context.Context)",
+			"NamedStdFile returns interface (go/types.Importer)",
 		},
 	})
 
@@ -155,9 +156,44 @@ func TestAll(t *testing.T) {
 			"NewDeclared returns interface (internal/sample.Doer)",
 			"newIDoer returns interface (example.iDoer)",
 			"NewNamedStruct returns interface (example.FooerBarer)",
-			"NamedContext returns interface (context.Context)",
 		},
 		config: NewDefaultConfig(),
+	})
+
+	tests = append(tests, testCase{
+		name: "allow: stdlib",
+		mask: []string{"*.go", "github.com/foo/bar/*", "internal/sample/*"},
+		want: []string{
+			"NewAnonymouseInterface returns interface (anonymouse interface)",
+			"dissAllowDirective2 returns interface (interface{})",
+			"dissAllowDirective6 returns interface (interface{})",
+			"fooInterface returns interface (interface{})",
+			"errorReturn returns interface (error)",
+			"errorAliasReturn returns interface (error)",
+			"errorTypeReturn returns interface (error)",
+			"newErrorInterface returns interface (error)",
+			"s returns interface (github.com/foo/bar.Buzzer)",
+			"New returns interface (github.com/foo/bar.Buzzer)",
+			"NewDeclared returns interface (internal/sample.Doer)",
+			"newIDoer returns interface (example.iDoer)",
+			"NewNamedStruct returns interface (example.FooerBarer)",
+		},
+		config: Config{
+			Action: Allow,
+			List:   []string{"stdlib"},
+		},
+	})
+	tests = append(tests, testCase{
+		name: "allow: stdlib",
+		mask: []string{"*.go", "github.com/foo/bar/*", "internal/sample/*"},
+		want: []string{
+			"NamedContext returns interface (context.Context)",
+			"NamedStdFile returns interface (go/types.Importer)",
+		},
+		config: Config{
+			Action: Reject,
+			List:   []string{"stdlib"},
+		},
 	})
 
 	// todo(butuzov): replace after adding named.

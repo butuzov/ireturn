@@ -28,6 +28,7 @@ func NewDefaultConfig() Config {
 			nameEmpty,
 			nameError,
 			nameAnon,
+			nameStdLib,
 		},
 	}
 }
@@ -55,8 +56,9 @@ func (config *Config) compileList() {
 			config.quick |= uint8(typeEmptyInterface)
 		case nameAnon:
 			config.quick |= uint8(typeAnonInterface)
+		case nameStdLib:
+			config.quick |= uint8(typeNamedStdInterface)
 		}
-		// todo(butuzov): named interfaces check?
 
 		// todo(butuzov): how can we log error in golangci-lint?
 	}
