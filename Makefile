@@ -11,7 +11,7 @@ build:
 tests:
 	go test -v -count=1 -race \
 		-failfast \
-		-parallel=16 \
+		-parallel=2 \
 		-timeout=1m \
 		-covermode=atomic \
 		-coverpkg=$(GOPKGS) -coverprofile=coverage.cov ./...

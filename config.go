@@ -4,21 +4,11 @@ import (
 	"regexp"
 )
 
-// you can use either allow or reject
-// you can allow standard library + some extra stuff to be used (error / interface)
+// defaultConfig is core of the validation, ...
+// todo(butuzov): write proper intro...
 
-// Config allows linter to be configurable.
-
-type Action int
-
-const (
-	Allow Action = iota // default action for empty zero config... reject none.
-	Reject
-)
-
-type Config struct {
-	Action Action
-	List   []string
+type defaultConfig struct {
+	List []string
 
 	// private fields (for search optimization look ups)
 	init  bool
@@ -26,19 +16,7 @@ type Config struct {
 	list  []*regexp.Regexp
 }
 
-func NewDefaultConfig() Config {
-	return Config{
-		Action: Allow,
-		List: []string{
-			nameEmpty,
-			nameError,
-			nameAnon,
-			nameStdLib,
-		},
-	}
-}
-
-func (config *Config) Has(i iface) bool {
+func (config *defaultConfig) Has(i iface) bool {
 	if !config.init {
 		config.compileList()
 		config.init = true
@@ -49,7 +27,7 @@ func (config *Config) Has(i iface) bool {
 	}
 
 	// not a named interface (because error, interface{}, anon interface has keywords.)
-	if i.t&typeNamedInterface == 0 {
+	if i.t&typeNamedInterface == 0 && i.t&typeNamedStdInterface == 0 {
 		return false
 	}
 
@@ -64,7 +42,7 @@ func (config *Config) Has(i iface) bool {
 
 // compileList will transform text list into a bitmask for quick searches and
 // slice of regular expressions for quick searches.
-func (config *Config) compileList() {
+func (config *defaultConfig) compileList() {
 	for _, str := range config.List {
 		switch str {
 		case nameError:

@@ -13,22 +13,26 @@ import (
 
 const nolintPrefix = "//nolint" // used for dissallow comments
 
-const name string = "ireturn"
+const name string = "ireturn" // linter name
 
-func NewAnalyzerWithConfig(config Config) *analysis.Analyzer {
+func NewAnalyzerWithConfig(r validator) *analysis.Analyzer {
 	return &analysis.Analyzer{
 		Name:     name,
 		Doc:      "Accept Interfaces, Return Concrete Types",
-		Run:      run(config),
+		Run:      run(r),
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
 	}
 }
 
 func NewAnalyzer() *analysis.Analyzer {
-	return NewAnalyzerWithConfig(NewDefaultConfig())
+	return NewAnalyzerWithConfig(DefaultValidatorConfig())
 }
 
-func run(config Config) func(*analysis.Pass) (interface{}, error) {
+func run(r validator) func(*analysis.Pass) (interface{}, error) {
+	if r == nil {
+		r = DefaultValidatorConfig()
+	}
+
 	return func(pass *analysis.Pass) (interface{}, error) {
 		var issues []analysis.Diagnostic
 
@@ -49,11 +53,7 @@ func run(config Config) func(*analysis.Pass) (interface{}, error) {
 
 			for _, i := range filterInterfaces(pass, f.Type.Results) {
 
-				if config.Action == Allow && config.Has(i) {
-					continue
-				}
-
-				if config.Action == Reject && !config.Has(i) {
+				if r.isValid(i) {
 					continue
 				}
 
@@ -116,11 +116,8 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []iface {
 				continue
 			}
 
-			results = append(results, issue(word, pos, typeNamedInterface))
-
-		// -----
-		default:
-			_ = v
+			results = append(results,
+				issue(word, pos, typeNamedInterface))
 
 		}
 	}
