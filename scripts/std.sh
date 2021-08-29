@@ -9,7 +9,7 @@ for i in $(seq 1 17); do
     # docker rmi golang:1.$i
 done
 
-dest="pkg/analyzer/std.go"
+dest="analyzer/std.go"
 
 echo "// Code generated using std.sh; DO NOT EDIT." > $dest
 echo "" >> $dest

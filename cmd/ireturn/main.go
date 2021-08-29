@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/butuzov/ireturn/pkg/analyzer"
+	"github.com/butuzov/ireturn/analyzer"
 	"golang.org/x/tools/go/analysis/singlechecker"
 )
 
