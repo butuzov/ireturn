@@ -137,10 +137,8 @@ func isStdLib(named string) bool {
 		return false
 	}
 
-	for _, lib := range std {
-		if lib == pkg[0] {
-			return true
-		}
+	if _, ok := std[pkg[0]]; ok {
+		return true
 	}
 
 	return false
