@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/butuzov/ireturn"
+	"github.com/butuzov/ireturn/pkg/analyzer"
 	"golang.org/x/tools/go/analysis/singlechecker"
 )
 
 func main() {
-	singlechecker.Main(ireturn.NewAnalyzer())
+	singlechecker.Main(analyzer.NewAnalyzer())
 }

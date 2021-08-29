@@ -1,4 +1,4 @@
-package ireturn
+package analyzer
 
 import "testing"
 

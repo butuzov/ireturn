@@ -5,7 +5,6 @@
 
 package ireturn
 
-
 var std = []string{
 	// added in Go v1.2 in compare to v1.1 (docker image)
 	"archive/tar",

@@ -1,4 +1,4 @@
-package ireturn
+package analyzer
 
 type validator interface {
 	isValid(iface) bool
