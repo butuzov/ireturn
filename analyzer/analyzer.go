@@ -3,8 +3,11 @@ package analyzer
 import (
 	"fmt"
 	"go/ast"
-	"go/types"
+	gotypes "go/types"
 	"strings"
+
+	"github.com/butuzov/ireturn/config"
+	"github.com/butuzov/ireturn/types"
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
@@ -15,22 +18,26 @@ const nolintPrefix = "//nolint" // used for dissallow comments
 
 const name string = "ireturn" // linter name
 
-func NewAnalyzerWithConfig(r validator) *analysis.Analyzer {
+type validator interface {
+	IsValid(types.IFace) bool
+}
+
+func NewAnalyzerWithConfig(validate validator) *analysis.Analyzer {
 	return &analysis.Analyzer{
 		Name:     name,
 		Doc:      "Accept Interfaces, Return Concrete Types",
-		Run:      run(r),
+		Run:      run(validate),
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
 	}
 }
 
 func NewAnalyzer() *analysis.Analyzer {
-	return NewAnalyzerWithConfig(DefaultValidatorConfig())
+	return NewAnalyzerWithConfig(config.DefaultValidatorConfig())
 }
 
 func run(r validator) func(*analysis.Pass) (interface{}, error) {
 	if r == nil {
-		r = DefaultValidatorConfig()
+		r = config.DefaultValidatorConfig()
 	}
 
 	return func(pass *analysis.Pass) (interface{}, error) {
@@ -53,13 +60,13 @@ func run(r validator) func(*analysis.Pass) (interface{}, error) {
 
 			for _, i := range filterInterfaces(pass, f.Type.Results) {
 
-				if r.isValid(i) {
+				if r.IsValid(i) {
 					continue
 				}
 
 				issues = append(issues, analysis.Diagnostic{
 					Pos:     f.Pos(),
-					Message: fmt.Sprintf("%s returns interface (%s)", f.Name.Name, i.name),
+					Message: fmt.Sprintf("%s returns interface (%s)", f.Name.Name, i.Name),
 				})
 			}
 		})
@@ -72,8 +79,8 @@ func run(r validator) func(*analysis.Pass) (interface{}, error) {
 	}
 }
 
-func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []iface {
-	var results []iface
+func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []types.IFace {
+	var results []types.IFace
 
 	for pos, el := range fl.List {
 		switch v := el.Type.(type) {
@@ -81,44 +88,42 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []iface {
 		case *ast.InterfaceType:
 
 			if len(v.Methods.List) == 0 {
-				results = append(results, issue("interface{}", pos, typeEmptyInterface))
+				results = append(results, issue("interface{}", pos, types.EmptyInterface))
 				continue
 			}
 
-			results = append(results, issue("anonymouse interface", pos, typeAnonInterface))
+			results = append(results, issue("anonymouse interface", pos, types.AnonInterface))
 
 		case *ast.Ident:
 
 			t1 := pass.TypesInfo.TypeOf(el.Type)
-			if !types.IsInterface(t1.Underlying()) {
+			if !gotypes.IsInterface(t1.Underlying()) {
 				continue
 			}
 
 			word := t1.String()
 			// only build in interface is error
-			if obj := types.Universe.Lookup(word); obj != nil {
-				results = append(results, issue(obj.Name(), pos, typeErrorInterface))
+			if obj := gotypes.Universe.Lookup(word); obj != nil {
+				results = append(results, issue(obj.Name(), pos, types.ErrorInterface))
 				continue
 			}
 
-			results = append(results, issue(word, pos, typeNamedInterface))
+			results = append(results, issue(word, pos, types.NamedInterface))
 
 		case *ast.SelectorExpr:
 
 			t1 := pass.TypesInfo.TypeOf(el.Type)
-			if !types.IsInterface(t1.Underlying()) {
+			if !gotypes.IsInterface(t1.Underlying()) {
 				continue
 			}
 
 			word := t1.String()
 			if isStdLib(word) {
-				results = append(results, issue(word, pos, typeNamedStdInterface))
+				results = append(results, issue(word, pos, types.NamedStdInterface))
 				continue
 			}
 
-			results = append(results,
-				issue(word, pos, typeNamedInterface))
-
+			results = append(results, issue(word, pos, types.NamedInterface))
 		}
 	}
 
@@ -179,4 +184,13 @@ func disallowDirectiveFound(cg *ast.CommentGroup) bool {
 	}
 
 	return false
+}
+
+// issue is shortcut that creates issue for next filtering
+func issue(name string, pos int, interfaceType types.IType) types.IFace {
+	return types.IFace{
+		Name: name,
+		Pos:  pos,
+		Type: interfaceType,
+	}
 }

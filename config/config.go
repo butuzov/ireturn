@@ -1,7 +1,9 @@
-package analyzer
+package config
 
 import (
 	"regexp"
+
+	"github.com/butuzov/ireturn/types"
 )
 
 // defaultConfig is core of the validation, ...
@@ -16,23 +18,23 @@ type defaultConfig struct {
 	list  []*regexp.Regexp
 }
 
-func (config *defaultConfig) Has(i iface) bool {
+func (config *defaultConfig) Has(i types.IFace) bool {
 	if !config.init {
 		config.compileList()
 		config.init = true
 	}
 
-	if config.quick&uint8(i.t) > 0 {
+	if config.quick&uint8(i.Type) > 0 {
 		return true
 	}
 
 	// not a named interface (because error, interface{}, anon interface has keywords.)
-	if i.t&typeNamedInterface == 0 && i.t&typeNamedStdInterface == 0 {
+	if i.Type&types.NamedInterface == 0 && i.Type&types.NamedStdInterface == 0 {
 		return false
 	}
 
 	for _, re := range config.list {
-		if re.MatchString(i.name) {
+		if re.MatchString(i.Name) {
 			return true
 		}
 	}
@@ -45,14 +47,14 @@ func (config *defaultConfig) Has(i iface) bool {
 func (config *defaultConfig) compileList() {
 	for _, str := range config.List {
 		switch str {
-		case nameError:
-			config.quick |= uint8(typeErrorInterface)
-		case nameEmpty:
-			config.quick |= uint8(typeEmptyInterface)
-		case nameAnon:
-			config.quick |= uint8(typeAnonInterface)
-		case nameStdLib:
-			config.quick |= uint8(typeNamedStdInterface)
+		case types.NameError:
+			config.quick |= uint8(types.ErrorInterface)
+		case types.NameEmpty:
+			config.quick |= uint8(types.EmptyInterface)
+		case types.NameAnon:
+			config.quick |= uint8(types.AnonInterface)
+		case types.NameStdLib:
+			config.quick |= uint8(types.NamedStdInterface)
 		}
 
 		// allow to parse regular expressions
