@@ -43,26 +43,28 @@ func run(r validator) func(*analysis.Pass) (interface{}, error) {
 
 		ins, _ := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 		ins.Preorder([]ast.Node{(*ast.FuncDecl)(nil)}, func(node ast.Node) {
-			//
+			// 001. Casting to funcdecl
 			f, _ := node.(*ast.FuncDecl)
 
-			// 02. Does it return any results ?
+			// 002. Does it return any results ?
 			if f.Type == nil || f.Type.Results == nil {
 				return
 			}
 
-			// 02. Is it allowed to be checked?
+			// 003. Is it allowed to be checked?
+			// TODO(butuzov): add inline comment
 			if hasDisallowDirective(f.Doc) {
 				return
 			}
 
+			// 004. Filtering Results.
 			for _, i := range filterInterfaces(pass, f.Type.Results) {
 
 				if r.IsValid(i) {
 					continue
 				}
 
-				issues = append(issues, analysis.Diagnostic{
+				issues = append(issues, analysis.Diagnostic{ //nolint: exhaustivestruct
 					Pos:     f.Pos(),
 					Message: fmt.Sprintf("%s returns interface (%s)", f.Name.Name, i.Name),
 				})
@@ -82,7 +84,7 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []types.IFace {
 
 	for pos, el := range fl.List {
 		switch v := el.Type.(type) {
-		// -----
+		// ----- empty or anonymous interfaces
 		case *ast.InterfaceType:
 
 			if len(v.Methods.List) == 0 {
