@@ -14,8 +14,6 @@ import (
 	"golang.org/x/tools/go/ast/inspector"
 )
 
-const nolintPrefix = "//nolint" // used for dissallow comments
-
 const name string = "ireturn" // linter name
 
 type validator interface {
@@ -144,43 +142,6 @@ func isStdLib(named string) bool {
 
 	if _, ok := std[pkg[0]]; ok {
 		return true
-	}
-
-	return false
-}
-
-func hasDisallowDirective(cg *ast.CommentGroup) bool {
-	if cg == nil {
-		return false
-	}
-
-	return disallowDirectiveFound(cg)
-}
-
-func disallowDirectiveFound(cg *ast.CommentGroup) bool {
-	for i := len(cg.List) - 1; i >= 0; i-- {
-		comment := cg.List[i]
-		if !strings.HasPrefix(comment.Text, nolintPrefix) {
-			continue
-		}
-
-		startingIdx := len(nolintPrefix)
-		for {
-			idx := strings.Index(comment.Text[startingIdx:], name)
-			if idx == -1 {
-				break
-			}
-
-			if len(comment.Text[startingIdx+idx:]) == len(name) {
-				return true
-			}
-
-			c := comment.Text[startingIdx+idx+len(name)]
-			if c == '.' || c == ',' || c == ' ' || c == '	' {
-				return true
-			}
-			startingIdx += idx + 1
-		}
 	}
 
 	return false
