@@ -1,0 +1,11 @@
+{
+    "files.exclude": {
+        ".sandbox/repos-*": true
+    },
+    "search.exclude": {
+        ".sandbox/repos-*": true
+    },
+    "files.watcherExclude": {
+        ".sandbox/repos-*": true
+    }
+}

@@ -21,3 +21,9 @@ lints:
 
 cover:
 	go tool cover -html=coverage.cov
+
+install:
+	go install -trimpath -v -ldflags="-w -s" ./cmd/ireturn/
+
+e2e: build
+	./scripts/run-e2e-tests.sh
