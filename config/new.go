@@ -22,7 +22,7 @@ func DefaultValidatorConfig() *allowConfig {
 
 // New is factory function that return allowConfig or rejectConfig depending
 // on provided arguments.
-func New(fs flag.FlagSet) (interface{}, error) {
+func New(fs *flag.FlagSet) (interface{}, error) {
 	var (
 		allowList  = toSlice(getFlagVal(fs, "allow"))
 		rejectList = toSlice(getFlagVal(fs, "reject"))
@@ -63,7 +63,7 @@ func toSlice(s string) []string {
 	return results
 }
 
-func getFlagVal(fs flag.FlagSet, name string) string {
+func getFlagVal(fs *flag.FlagSet, name string) string {
 	flg := fs.Lookup(name)
 
 	if flg == nil {

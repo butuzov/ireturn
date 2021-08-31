@@ -32,7 +32,7 @@ type analyzer struct {
 
 func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 	// 00. Part 1. Handling Configuration Only Once.
-	a.once.Do(func() { a.readConfiguration(pass.Analyzer.Flags) })
+	a.once.Do(func() { a.readConfiguration(&pass.Analyzer.Flags) })
 
 	// 00. Part 2. Handling Errors
 	if a.err != nil {
@@ -78,7 +78,7 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 	return nil, nil
 }
 
-func (a *analyzer) readConfiguration(fs flag.FlagSet) {
+func (a *analyzer) readConfiguration(fs *flag.FlagSet) {
 	cnf, err := config.New(fs)
 	if err != nil {
 		a.err = err
