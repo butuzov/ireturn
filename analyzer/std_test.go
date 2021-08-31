@@ -19,3 +19,13 @@ func Test_isStdLib(t *testing.T) {
 		})
 	}
 }
+
+func assert(t *testing.T, condHappend bool, msg string, args ...interface{}) bool {
+	t.Helper()
+	if condHappend {
+		return true
+	}
+
+	t.Errorf(msg, args...)
+	return false
+}

@@ -1,3 +1,6 @@
+//nolint: wrapcheck
+//nolint: exhaustivestruct
+
 package analyzer
 
 import (
@@ -357,15 +360,4 @@ func cp(src, dst string) error {
 	}
 
 	return nil
-}
-
-//nolint: unused
-func assert(t *testing.T, condHappend bool, msg string, args ...interface{}) bool {
-	t.Helper()
-	if condHappend {
-		return true
-	}
-
-	t.Errorf(msg, args...)
-	return false
 }

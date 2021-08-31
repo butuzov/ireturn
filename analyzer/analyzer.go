@@ -130,19 +130,16 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []types.IFace {
 	return results
 }
 
-// isStdLib will run small checks against pkg to find out if it comes from
-// a standard library or not.
+// isStdLib will run small checks against pkg to find out if  named interface
+// we lookling on comes from a standard library or not.
 func isStdLib(named string) bool {
-	pkg := strings.Split(named, ".")
-
-	//nolint: gomnd
-	if len(pkg) != 2 {
-		// silently return false insted of the panic.
-		// if its not 2, its not standard lib.
+	// find last dot index.
+	idx := strings.LastIndex(named, ".")
+	if idx == -1 {
 		return false
 	}
 
-	if _, ok := std[pkg[0]]; ok {
+	if _, ok := std[named[0:idx]]; ok {
 		return true
 	}
 

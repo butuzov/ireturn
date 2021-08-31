@@ -6,7 +6,7 @@ mkdir -p .tmp
 for i in $(seq 1 17); do
     docker run --rm -it golang:1.$i go list std \
         | grep -v internal | grep -v vendor > .tmp/go@1.$i;
-    # docker rmi golang:1.$i
+    docker rmi golang:1.$i
 done
 
 dest="analyzer/std.go"
