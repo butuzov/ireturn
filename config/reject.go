@@ -8,7 +8,7 @@ type rejectConfig struct {
 	*defaultConfig
 }
 
-func RejectAll(patterns []string) *rejectConfig {
+func rejectAll(patterns []string) *rejectConfig {
 	return &rejectConfig{&defaultConfig{List: patterns}}
 }
 

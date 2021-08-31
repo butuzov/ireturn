@@ -8,7 +8,7 @@ type allowConfig struct {
 	*defaultConfig
 }
 
-func AllowAll(patterns []string) *allowConfig {
+func allowAll(patterns []string) *allowConfig {
 	return &allowConfig{&defaultConfig{List: patterns}}
 }
 

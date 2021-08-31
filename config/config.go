@@ -62,6 +62,5 @@ func (config *defaultConfig) compileList() {
 		if re, err := regexp.Compile(str); err == nil {
 			config.list = append(config.list, re)
 		}
-
 	}
 }
