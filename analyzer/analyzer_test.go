@@ -4,13 +4,14 @@
 package analyzer
 
 import (
+	"flag"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/butuzov/ireturn/config"
 	"github.com/butuzov/ireturn/types"
 
 	"github.com/google/go-cmp/cmp"
@@ -19,86 +20,95 @@ import (
 
 const testPackageName = "example"
 
+// ---------------------------------------------------------- test case --------
+
+type testCase struct {
+	name string
+	meta map[string]string
+	mask []string
+
+	// expectations -----
+	want []string
+	fail error
+}
+
 func TestAll(t *testing.T) {
 	tests := []testCase{}
 
 	tests = append(tests, testCase{
 		name: "Hello World",
-		mask: []string{
-			"hello-world.go",
-			"go.*",
-		},
+		mask: []string{"hello-world.go", "go.*"},
+		meta: map[string]string{},
 		want: []string{},
 	})
 
 	tests = append(tests, testCase{
 		name: "interface{}/allow",
 		mask: []string{"empty_interface.go", "go.*"},
+		meta: map[string]string{
+			"allow": types.NameEmpty,
+		},
 		want: []string{},
-		reject: config.AllowAll([]string{
-			types.NameEmpty, // empty
-		}),
 	})
 
 	tests = append(tests, testCase{
 		name: "interface{}/reject",
 		mask: []string{"empty_interface.go", "go.*"},
+		meta: map[string]string{
+			"reject": types.NameEmpty,
+		},
 		want: []string{
 			"fooInterface returns interface (interface{})",
 		},
-		reject: config.RejectAll([]string{
-			types.NameEmpty,
-		}),
 	})
 
 	tests = append(tests, testCase{
 		name: "Anonymouse Interface/allow",
 		mask: []string{"anonymouse_interafce.go", "go.*"},
+		meta: map[string]string{
+			"allow": types.NameAnon,
+		},
 		want: []string{}, // no errors expected as anon interfaces are allowed
-		reject: config.AllowAll([]string{
-			types.NameAnon,
-		}),
 	})
 
 	tests = append(tests, testCase{
 		name: "Anonymouse Interface/reject",
 		mask: []string{"anonymouse_interafce.go", "go.*"},
+		meta: map[string]string{
+			"reject": types.NameAnon,
+		},
 		want: []string{
 			"NewAnonymouseInterface returns interface (anonymouse interface)",
 		},
-		reject: config.RejectAll([]string{
-			types.NameAnon,
-		},
-		),
 	})
 
 	tests = append(tests, testCase{
 		name: "Disallow Directives",
 		mask: []string{"disallow_directive_ok.go", "go.*"},
+		meta: map[string]string{
+			"reject": types.NameEmpty,
+		},
 		want: []string{
 			"dissAllowDirective2 returns interface (interface{})",
 			"dissAllowDirective6 returns interface (interface{})",
 		},
-		reject: config.RejectAll([]string{
-			types.NameEmpty,
-		}),
 	})
 
 	tests = append(tests, testCase{
 		name: "Error/allow",
-		mask: []string{"errors.go", "go.*"},
-		reject: config.AllowAll([]string{
-			types.NameError, //
-		}),
+		mask: []string{"/src/errors.go", "go.*"},
+		meta: map[string]string{
+			"allow": types.NameError,
+		},
 		want: []string{},
 	})
 
 	tests = append(tests, testCase{
 		name: "Error/reject",
 		mask: []string{"errors.go", "go.*"},
-		reject: config.RejectAll([]string{
-			types.NameError,
-		}),
+		meta: map[string]string{
+			"reject": types.NameError,
+		},
 		want: []string{
 			"errorReturn returns interface (error)",
 			"errorAliasReturn returns interface (error)",
@@ -112,35 +122,38 @@ func TestAll(t *testing.T) {
 	// but rather we will create new ones that are "external"
 	// 2) * we can't (and shouldn't) specify named global pattern for named.
 	tests = append(tests, testCase{
-		name:   "Named Interfaces/(allow*)",
-		mask:   []string{"named_*.go", "github.com/foo/bar/*", "internal/sample/*"},
-		reject: config.AllowAll([]string{}),
+		name: "Named Interfaces/(allow*)",
+		mask: []string{"named_*.go", "github.com/foo/bar/*", "internal/sample/*"},
+		meta: map[string]string{
+			"allow": "",
+		},
 		want: []string{
 			"s returns interface (github.com/foo/bar.Buzzer)",
 			"New returns interface (github.com/foo/bar.Buzzer)",
 			"NewDeclared returns interface (internal/sample.Doer)",
 			"newIDoer returns interface (example.iDoer)",
 			"NewNamedStruct returns interface (example.FooerBarer)",
-			"NamedContext returns interface (context.Context)",
-			"NamedStdFile returns interface (go/types.Importer)",
 		},
 	})
 
 	tests = append(tests, testCase{
 		name: "Named Interfaces/stdlib/reject",
 		mask: []string{"named_*.go", "github.com/foo/bar/*", "internal/sample/*"},
+		meta: map[string]string{
+			"reject": types.NameStdLib,
+		},
 		want: []string{
 			"NamedContext returns interface (context.Context)",
 			"NamedStdFile returns interface (go/types.Importer)",
 		},
-		reject: config.RejectAll([]string{
-			types.NameStdLib,
-		}),
 	})
 
 	tests = append(tests, testCase{
 		name: "Named Interfaces/stdlib/allow",
 		mask: []string{"named_*.go", "github.com/foo/bar/*", "internal/sample/*"},
+		meta: map[string]string{
+			"allow": types.NameStdLib,
+		},
 		want: []string{
 			"s returns interface (github.com/foo/bar.Buzzer)",
 			"New returns interface (github.com/foo/bar.Buzzer)",
@@ -148,17 +161,14 @@ func TestAll(t *testing.T) {
 			"newIDoer returns interface (example.iDoer)",
 			"NewNamedStruct returns interface (example.FooerBarer)",
 		},
-		reject: config.AllowAll([]string{
-			types.NameStdLib, //
-		}),
 	})
 
 	tests = append(tests, testCase{
 		name: "Named Interfaces/pattern/allow",
 		mask: []string{"named_*.go", "github.com/foo/bar/*", "internal/sample/*"},
-		reject: config.AllowAll([]string{
-			"github.com/foo/bar", // only valid interface is from this package.
-		}),
+		meta: map[string]string{
+			"allow": "github.com/foo/bar", // only valid interface is from this package.
+		},
 		want: []string{
 			"NewDeclared returns interface (internal/sample.Doer)",
 			"newIDoer returns interface (example.iDoer)",
@@ -171,9 +181,9 @@ func TestAll(t *testing.T) {
 	tests = append(tests, testCase{
 		name: "Named Interfaces/pattern/reject",
 		mask: []string{"named_*.go", "github.com/foo/bar/*", "internal/sample/*"},
-		reject: config.RejectAll([]string{
-			"github.com/foo/bar",
-		}),
+		meta: map[string]string{
+			"reject": "github.com/foo/bar", // only valid interface is from this package.
+		},
 		want: []string{
 			"s returns interface (github.com/foo/bar.Buzzer)",
 			"New returns interface (github.com/foo/bar.Buzzer)",
@@ -183,17 +193,20 @@ func TestAll(t *testing.T) {
 	tests = append(tests, testCase{
 		name: "Named Interfaces/regexp/reject",
 		mask: []string{"named_*.go", "github.com/foo/bar/*", "internal/sample/*"},
+		meta: map[string]string{
+			"reject": "\\.Doer", //
+		},
 		want: []string{
 			"NewDeclared returns interface (internal/sample.Doer)",
 		},
-		reject: config.RejectAll([]string{
-			"\\.Doer", // .Doer only is invalid interface
-		}),
 	})
 
 	tests = append(tests, testCase{
 		name: "Named Interfaces/regexp/allow",
 		mask: []string{"named_*.go", "github.com/foo/bar/*", "internal/sample/*"},
+		meta: map[string]string{
+			"allow": "\\.Doer", // allow only Doer interfaces from any package
+		},
 		want: []string{
 			"s returns interface (github.com/foo/bar.Buzzer)",
 			"New returns interface (github.com/foo/bar.Buzzer)",
@@ -202,27 +215,12 @@ func TestAll(t *testing.T) {
 			"NamedContext returns interface (context.Context)",
 			"NamedStdFile returns interface (go/types.Importer)",
 		},
-		reject: config.AllowAll([]string{
-			"\\.Doer", // .Doer only is valid interface
-		}),
 	})
 
 	tests = append(tests, testCase{
 		name: "default/all/reject_all_but_named(non_std)",
 		mask: []string{"*.go", "github.com/foo/bar/*", "internal/sample/*"},
-		want: []string{
-			"s returns interface (github.com/foo/bar.Buzzer)",
-			"New returns interface (github.com/foo/bar.Buzzer)",
-			"NewDeclared returns interface (internal/sample.Doer)",
-			"newIDoer returns interface (example.iDoer)",
-			"NewNamedStruct returns interface (example.FooerBarer)",
-		},
-		reject: config.DefaultValidatorConfig(),
-	})
-
-	tests = append(tests, testCase{
-		name: "default/all/nil_reject",
-		mask: []string{"*.go", "github.com/foo/bar/*", "internal/sample/*"},
+		meta: map[string]string{}, // skipping any configuration to run default one.
 		want: []string{
 			"s returns interface (github.com/foo/bar.Buzzer)",
 			"New returns interface (github.com/foo/bar.Buzzer)",
@@ -235,6 +233,9 @@ func TestAll(t *testing.T) {
 	tests = append(tests, testCase{
 		name: "all/stdlib/allow",
 		mask: []string{"*.go", "github.com/foo/bar/*", "internal/sample/*"},
+		meta: map[string]string{
+			"allow": types.NameStdLib, // allow only interfaces from standard library
+		},
 		want: []string{
 			"NewAnonymouseInterface returns interface (anonymouse interface)",
 			"dissAllowDirective2 returns interface (interface{})",
@@ -250,9 +251,16 @@ func TestAll(t *testing.T) {
 			"newIDoer returns interface (example.iDoer)",
 			"NewNamedStruct returns interface (example.FooerBarer)",
 		},
-		reject: config.AllowAll([]string{
-			types.NameStdLib,
-		}),
+	})
+
+	tests = append(tests, testCase{
+		name: "allow/reject",
+		mask: []string{"hello-world.go", "go.*"},
+		meta: map[string]string{
+			"allow":  types.NameStdLib,
+			"reject": types.NameStdLib,
+		},
+		want: []string{},
 	})
 
 	for _, tt := range tests {
@@ -260,25 +268,19 @@ func TestAll(t *testing.T) {
 	}
 }
 
-// ---------------------------------------------------------- fake test --------
+// ---------------------------------------------------------- spy test ---------
 
-type fakeTest struct{}
+type spyTest struct {
+	errors []error
+}
 
-func (t *fakeTest) Errorf(format string, args ...interface{}) {}
-
-// ---------------------------------------------------------- test case --------
-
-type testCase struct {
-	name   string
-	reject validator
-	mask   []string // file mask
-	want   []string
+func (st *spyTest) Errorf(format string, args ...interface{}) {
+	st.errors = append(st.errors, fmt.Errorf(format, args...))
 }
 
 func (tc testCase) test() func(*testing.T) {
 	return func(t *testing.T) {
-		t.Parallel()
-		// -------------------------------------------------------------- setup ----
+		// ---------------------------------------------------------- setup ----
 		goroot, srcdir, err := directory(t)
 		if err != nil {
 			t.Error(err)
@@ -288,11 +290,21 @@ func (tc testCase) test() func(*testing.T) {
 			t.Error(err)
 		}
 
-		// --------------------------------------------------------------- test ----
-		results := analysistest.Run(
-			&fakeTest{}, goroot, NewAnalyzerWithConfig(tc.reject), testPackageName)
+		// ----------------------------------------------------------- test ----
+		analyzer := NewAnalyzer()
 
-		// ------------------------------------------------------------ results ----
+		if len(tc.meta) > 0 {
+			fs := flag.NewFlagSet("", flag.ExitOnError)
+			for key, value := range tc.meta {
+				fs.String(key, value, "")
+			}
+			analyzer.Flags = *fs
+		}
+
+		st := &spyTest{errors: []error{}}
+		results := analysistest.Run(st, goroot, analyzer, testPackageName)
+
+		// -------------------------------------------------------- results ----
 
 		tmp := []string{}
 		for _, d := range results[0].Diagnostics {
@@ -301,6 +313,17 @@ func (tc testCase) test() func(*testing.T) {
 
 		if diff := cmp.Diff(tc.want, tmp); diff != "" {
 			t.Errorf("mismatch (-want +got):\n%s", diff)
+		}
+
+		// --------------------------------------------------------- errors ----
+		if tc.fail != nil {
+			for _, err := range st.errors {
+				got := err.Error()
+				fmt.Println(">", got)
+				if !strings.Contains(got, tc.fail.Error()) {
+					t.Errorf("unexpected error: %#v", err)
+				}
+			}
 		}
 	}
 }

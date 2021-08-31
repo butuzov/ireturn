@@ -1,10 +1,12 @@
 package analyzer
 
 import (
+	"flag"
 	"fmt"
 	"go/ast"
 	gotypes "go/types"
 	"strings"
+	"sync"
 
 	"github.com/butuzov/ireturn/config"
 	"github.com/butuzov/ireturn/types"
@@ -20,63 +22,94 @@ type validator interface {
 	IsValid(types.IFace) bool
 }
 
-func NewAnalyzerWithConfig(validate validator) *analysis.Analyzer {
-	return &analysis.Analyzer{
-		Name:     name,
-		Doc:      "Accept Interfaces, Return Concrete Types",
-		Run:      run(validate),
-		Requires: []*analysis.Analyzer{inspect.Analyzer},
+type analyzer struct {
+	once    sync.Once
+	handler validator
+	err     error
+
+	found []analysis.Diagnostic
+}
+
+func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
+	// 00. Part 1. Handling Configuration Only Once.
+	a.once.Do(func() { a.readConfiguration(pass.Analyzer.Flags) })
+
+	// 00. Part 2. Handling Errors
+	if a.err != nil {
+		return nil, a.err
 	}
+
+	// 01. Running Inspection.
+	ins, _ := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+	ins.Preorder([]ast.Node{(*ast.FuncDecl)(nil)}, func(node ast.Node) {
+		// 001. Casting to funcdecl
+		f, _ := node.(*ast.FuncDecl)
+
+		// 002. Does it return any results ?
+		if f.Type == nil || f.Type.Results == nil {
+			return
+		}
+
+		// 003. Is it allowed to be checked?
+		// TODO(butuzov): add inline comment
+		if hasDisallowDirective(f.Doc) {
+			return
+		}
+
+		// 004. Filtering Results.
+		for _, i := range filterInterfaces(pass, f.Type.Results) {
+
+			if a.handler.IsValid(i) {
+				continue
+			}
+
+			a.found = append(a.found, analysis.Diagnostic{ //nolint: exhaustivestruct
+				Pos:     f.Pos(),
+				Message: fmt.Sprintf("%s returns interface (%s)", f.Name.Name, i.Name),
+			})
+		}
+	})
+
+	// 02. Printing reports.
+	for i := range a.found {
+		pass.Report(a.found[i])
+	}
+
+	return nil, nil
+}
+
+func (a *analyzer) readConfiguration(fs flag.FlagSet) {
+	cnf, err := config.New(fs)
+	if err != nil {
+		a.err = err
+		return
+	}
+
+	if validatorImpl, ok := cnf.(validator); ok {
+		a.handler = validatorImpl
+		return
+	}
+
+	a.handler = config.DefaultValidatorConfig()
 }
 
 func NewAnalyzer() *analysis.Analyzer {
-	return NewAnalyzerWithConfig(config.DefaultValidatorConfig())
+	a := analyzer{} //nolint: exhaustivestruct
+
+	return &analysis.Analyzer{
+		Name:     name,
+		Doc:      "Accept Interfaces, Return Concrete Types",
+		Run:      a.run,
+		Requires: []*analysis.Analyzer{inspect.Analyzer},
+		Flags:    flags(),
+	}
 }
 
-func run(r validator) func(*analysis.Pass) (interface{}, error) {
-	if r == nil {
-		r = config.DefaultValidatorConfig()
-	}
-
-	return func(pass *analysis.Pass) (interface{}, error) {
-		var issues []analysis.Diagnostic
-
-		ins, _ := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
-		ins.Preorder([]ast.Node{(*ast.FuncDecl)(nil)}, func(node ast.Node) {
-			// 001. Casting to funcdecl
-			f, _ := node.(*ast.FuncDecl)
-
-			// 002. Does it return any results ?
-			if f.Type == nil || f.Type.Results == nil {
-				return
-			}
-
-			// 003. Is it allowed to be checked?
-			// TODO(butuzov): add inline comment
-			if hasDisallowDirective(f.Doc) {
-				return
-			}
-
-			// 004. Filtering Results.
-			for _, i := range filterInterfaces(pass, f.Type.Results) {
-
-				if r.IsValid(i) {
-					continue
-				}
-
-				issues = append(issues, analysis.Diagnostic{ //nolint: exhaustivestruct
-					Pos:     f.Pos(),
-					Message: fmt.Sprintf("%s returns interface (%s)", f.Name.Name, i.Name),
-				})
-			}
-		})
-
-		for i := range issues {
-			pass.Report(issues[i])
-		}
-
-		return nil, nil
-	}
+func flags() flag.FlagSet {
+	set := flag.NewFlagSet("", flag.PanicOnError)
+	set.String("allow", "", "ffff")
+	set.String("reject", "", "ffff")
+	return *set
 }
 
 func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []types.IFace {
@@ -94,6 +127,7 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []types.IFace {
 
 			results = append(results, issue("anonymouse interface", pos, types.AnonInterface))
 
+		// ------ Errors and interfaces from same package
 		case *ast.Ident:
 
 			t1 := pass.TypesInfo.TypeOf(el.Type)
@@ -105,11 +139,13 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []types.IFace {
 			// only build in interface is error
 			if obj := gotypes.Universe.Lookup(word); obj != nil {
 				results = append(results, issue(obj.Name(), pos, types.ErrorInterface))
+
 				continue
 			}
 
 			results = append(results, issue(word, pos, types.NamedInterface))
 
+		// ------- standard library and 3rd party interfaces
 		case *ast.SelectorExpr:
 
 			t1 := pass.TypesInfo.TypeOf(el.Type)
@@ -120,6 +156,7 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []types.IFace {
 			word := t1.String()
 			if isStdLib(word) {
 				results = append(results, issue(word, pos, types.NamedStdInterface))
+
 				continue
 			}
 
@@ -146,7 +183,7 @@ func isStdLib(named string) bool {
 	return false
 }
 
-// issue is shortcut that creates issue for next filtering
+// issue is shortcut that creates issue for next filtering.
 func issue(name string, pos int, interfaceType types.IType) types.IFace {
 	return types.IFace{
 		Name: name,

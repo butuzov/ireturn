@@ -5,12 +5,7 @@ import (
 	"strings"
 )
 
-// Handling disallow comments
-//
-// 	//nolint: ireturn
-//
-
-const nolintPrefix = "//nolint" // used for disallow comments
+const nolintPrefix = "//nolint"
 
 func hasDisallowDirective(cg *ast.CommentGroup) bool {
 	if cg == nil {
