@@ -27,3 +27,12 @@ install:
 
 e2e: build
 	./scripts/run-e2e-tests.sh
+
+
+bin/goreleaser:
+	curl -fsSL https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh |  sh -s -- -b bin
+
+test-release: bin/goreleaser
+	goreleaser release --help
+	goreleaser release -f .goreleaser.yaml \
+		--skip-validate --skip-publish --rm-dist
