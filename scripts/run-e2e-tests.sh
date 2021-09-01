@@ -6,7 +6,7 @@ pushd .sandbox;
     do
         name=$(basename $repo);
         if [[ ! -d "repo-$(basename $repo)" ]]; then
-            git clone -q https://github.com/shipt/plinko "repo-$(basename $repo)";
+            git clone -q $repo "repo-$(basename $repo)";
         fi
     done
 
