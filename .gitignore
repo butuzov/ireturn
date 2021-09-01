@@ -1,6 +1,8 @@
 # artifacts
 coverage.cov
 bin/*
+dist/*
+
 # generators
 .tmp
 go@*.*
