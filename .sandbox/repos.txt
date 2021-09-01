@@ -9,3 +9,5 @@ https://github.com/sqshq/sampler
 https://github.com/go-chi/chi
 https://github.com/micro/micro
 https://github.com/uber-go/zap
+https://github.com/hashicorp/consul
+https://github.com/hashicorp/terraform
