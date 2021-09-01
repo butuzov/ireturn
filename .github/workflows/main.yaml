@@ -28,6 +28,14 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
 
+      - uses: actions/cache@v2
+        if: ${{ !env.ACT }}
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ matrix.golang }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ matrix.golang }}-
+
       - run: make build
       - run: make tests
 
