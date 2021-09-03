@@ -1,0 +1,25 @@
+name: ireturn
+description: Runs the Go's ireturn linter that checks for returned interfaces
+author: "@butuzov"
+
+inputs:
+  allow:
+    required: false
+    description: comma-separated list of interfaces, you like to allow
+    default: ''
+  reject:
+    required: false
+    description: comma-separated list of interfaces, you like to reject
+    default: ''
+
+runs:
+  using: docker
+  image: Dockerfile
+  args:
+    - -allow="${{ inputs.allow }}"
+    - -reject="${{ inputs.reject }}"
+    - ./...
+
+branding:
+  icon: 'check-circle'
+  color: 'blue'
