@@ -5,22 +5,22 @@ Accept Interfaces, Return Concrete Types
 
 ## Install
 
-You can get `ireturn` with `go get` command.
+You can get `ireturn` with `go install` command.
 
 ```shell
-go get -u github.com/butuzov/ireturn/cmd/ireturn
+go install github.com/butuzov/ireturn/cmd/ireturn
 ```
 
 ### Compiled Binary
 
-Or you can download suitable binary from the [releases](https://github.com/butuzov/ireturn/releases) section.
+Or you can download the suitable binary from the [releases](https://github.com/butuzov/ireturn/releases) section.
 
 ## Usage
 
-`ireturn` work with two arguments (but allow to use only one of them in same moment):
+`ireturn` work with two arguments (but allow to use of only one of them in the same moment):
 
-* `accept` - comma-separated list of interfaces, you like to allow.
-* `reject` - comma-separated list of interfaces, you like to reject.
+* `accept` - accept-list of the comma-separated interfaces.
+* `reject` - reject-list of the comma-separated interfaces.
 
 By default, `ireturn` will accept all errors (`error`), empty interfaces (`interfaces{}`), anonymous interfaces declarations ( `interface { methodName() }` ), and interfaces from standard library as a valid ones.
 

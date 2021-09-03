@@ -107,8 +107,8 @@ func NewAnalyzer() *analysis.Analyzer {
 
 func flags() flag.FlagSet {
 	set := flag.NewFlagSet("", flag.PanicOnError)
-	set.String("allow", "", "comma-separated list of interfaces, you like to allow")
-	set.String("reject", "", "comma-separated list of interfaces, you like to reject")
+	set.String("allow", "", "accept-list of the comma-separated interfaces")
+	set.String("reject", "", "reject-list of the comma-separated interfaces")
 	return *set
 }
 
