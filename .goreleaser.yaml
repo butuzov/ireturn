@@ -50,4 +50,4 @@ archives:
         format: zip
     files:
       - LICENSE
-      - README.md
+      - readme.md

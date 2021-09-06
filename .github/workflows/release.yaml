@@ -74,7 +74,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Login do docker.io
-        run: docker login -u butuzov -p ${{ secrets.DOCKER_TOKEN }}
+        run: docker login -u butuzov -p ${{ secrets.DOCKER_HUB }}
 
       - name: Build and publish ${{ matrix.target.Dockerfile }}
         uses: docker/build-push-action@v2
