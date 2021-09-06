@@ -125,7 +125,7 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []types.IFace {
 				continue
 			}
 
-			results = append(results, issue("anonymouse interface", pos, types.AnonInterface))
+			results = append(results, issue("anonymous interface", pos, types.AnonInterface))
 
 		// ------ Errors and interfaces from same package
 		case *ast.Ident:

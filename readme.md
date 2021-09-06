@@ -24,14 +24,14 @@ Or you can download the suitable binary from the [releases](https://github.com/b
 
 By default, `ireturn` will accept all errors (`error`), empty interfaces (`interfaces{}`), anonymous interfaces declarations ( `interface { methodName() }` ), and interfaces from standard library as a valid ones.
 
-Interfaces in the list can be provided as regexps or keywords ("error" for "error", "empty" for `interface{}`, `anon` fpr anonymouse interfaces):
+Interfaces in the list can be provided as regexps or keywords ("error" for "error", "empty" for `interface{}`, `anon` for anonymous interfaces):
 
 ```bash
 # allow usage of empty interfaces, errors and Doer interface from any package.
 ireturn --accpet="\\.Doer,error,empty" ./...
-# reject stndard library interfaces and plinko.Payload as valid ones
+# reject standard library interfaces and plinko.Payload as valid ones
 ireturn --reject="std,github.com/shipt/plinko.Payload" ./...
-# default settings allows errors, empty interfaces, anonymouse declarations and standard library
+# default settings allows errors, empty interfaces, anonymous declarations and standard library
 ireturn ./..
 # checkfor non idiomatic interface names
 ireturn -allow="error,empty,anon,stdlib,.*(or|er)$" ./...
