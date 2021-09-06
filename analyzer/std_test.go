@@ -1,6 +1,10 @@
 package analyzer
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func Test_isStdLib(t *testing.T) {
 	tests := map[string]bool{
@@ -14,18 +18,8 @@ func Test_isStdLib(t *testing.T) {
 		want, name := want, name
 		t.Run(name, func(t *testing.T) {
 			got := isStdLib(name)
-			assert(t, want == got,
+			assert.Equal(t, got, want,
 				"pkg %s doens't match expectations (got %v vs want %v)", name, got, want)
 		})
 	}
-}
-
-func assert(t *testing.T, condHappend bool, msg string, args ...interface{}) bool {
-	t.Helper()
-	if condHappend {
-		return true
-	}
-
-	t.Errorf(msg, args...)
-	return false
 }
