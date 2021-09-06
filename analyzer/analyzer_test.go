@@ -14,7 +14,7 @@ import (
 
 	"github.com/butuzov/ireturn/types"
 
-	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 	"golang.org/x/tools/go/analysis/analysistest"
 )
 
@@ -311,18 +311,14 @@ func (tc testCase) test() func(*testing.T) {
 			tmp = append(tmp, d.Message)
 		}
 
-		if diff := cmp.Diff(tc.want, tmp); diff != "" {
-			t.Errorf("mismatch (-want +got):\n%s", diff)
-		}
+		assert.Equal(t, tc.want, tmp)
 
 		// --------------------------------------------------------- errors ----
 		if tc.fail != nil {
 			for _, err := range st.errors {
 				got := err.Error()
 				fmt.Println(">", got)
-				if !strings.Contains(got, tc.fail.Error()) {
-					t.Errorf("unexpected error: %#v", err)
-				}
+				assert.Containsf(t, got, tc.fail.Error(), "unexpected error: %#v", err)
 			}
 		}
 	}
