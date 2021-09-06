@@ -50,6 +50,14 @@ You can use shorthand for some types of interfaces:
 
 `golangci-lint` compliant disable directive `//nolint: ireturn` can be used with `ireturn`
 
+### GitHub Action
+
+```
+- uses: butuzov/ireturn@main
+  with:
+    allow: "error,empty"
+```
+
 ## Examples
 
 ```go
