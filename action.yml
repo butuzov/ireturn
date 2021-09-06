@@ -1,4 +1,4 @@
-name: ireturn
+name: ireturn-linter
 description: Runs the Go's ireturn linter that checks for returned interfaces
 author: "@butuzov"
 

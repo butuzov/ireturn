@@ -53,7 +53,7 @@ You can use shorthand for some types of interfaces:
 ### GitHub Action
 
 ```
-- uses: butuzov/ireturn@main
+- uses: butuzov/ireturn-linter@main
   with:
     allow: "error,empty"
 ```
