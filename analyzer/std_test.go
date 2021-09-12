@@ -17,7 +17,7 @@ func Test_isStdLib(t *testing.T) {
 	for name, want := range tests {
 		want, name := want, name
 		t.Run(name, func(t *testing.T) {
-			got := isStdLib(name)
+			got := isStdPkgInterface(name)
 			assert.Equal(t, got, want,
 				"pkg %s doens't match expectations (got %v vs want %v)", name, got, want)
 		})

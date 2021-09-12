@@ -39,8 +39,18 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 		return nil, a.err
 	}
 
-	// 01. Running Inspection.
 	ins, _ := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+
+	// 00. does file have dot-imported stadard packages?
+	dotImportedStd := make(map[string]struct{})
+	ins.Preorder([]ast.Node{(*ast.ImportSpec)(nil)}, func(node ast.Node) {
+		i, _ := node.(*ast.ImportSpec)
+		if i.Name != nil && i.Name.Name == "." {
+			dotImportedStd[strings.Trim(i.Path.Value, `"`)] = struct{}{}
+		}
+	})
+
+	// 01. Running Inspection.
 	ins.Preorder([]ast.Node{(*ast.FuncDecl)(nil)}, func(node ast.Node) {
 		// 001. Casting to funcdecl
 		f, _ := node.(*ast.FuncDecl)
@@ -57,7 +67,7 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 		}
 
 		// 004. Filtering Results.
-		for _, i := range filterInterfaces(pass, f.Type.Results) {
+		for _, i := range filterInterfaces(pass, f.Type.Results, dotImportedStd) {
 
 			if a.handler.IsValid(i) {
 				continue
@@ -112,7 +122,7 @@ func flags() flag.FlagSet {
 	return *set
 }
 
-func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []types.IFace {
+func filterInterfaces(p *analysis.Pass, fl *ast.FieldList, di map[string]struct{}) []types.IFace {
 	var results []types.IFace
 
 	for pos, el := range fl.List {
@@ -130,7 +140,7 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []types.IFace {
 		// ------ Errors and interfaces from same package
 		case *ast.Ident:
 
-			t1 := pass.TypesInfo.TypeOf(el.Type)
+			t1 := p.TypesInfo.TypeOf(el.Type)
 			if !gotypes.IsInterface(t1.Underlying()) {
 				continue
 			}
@@ -143,18 +153,30 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []types.IFace {
 				continue
 			}
 
+			// is it dot-imported package?
+			// handling cases when stdlib package imported via "." dot-import
+			//
+			if len(di) > 0 {
+				name := stdPkgInterface(word)
+				if _, ok := di[name]; ok {
+					results = append(results, issue(word, pos, types.NamedStdInterface))
+
+					continue
+				}
+			}
+
 			results = append(results, issue(word, pos, types.NamedInterface))
 
 		// ------- standard library and 3rd party interfaces
 		case *ast.SelectorExpr:
 
-			t1 := pass.TypesInfo.TypeOf(el.Type)
+			t1 := p.TypesInfo.TypeOf(el.Type)
 			if !gotypes.IsInterface(t1.Underlying()) {
 				continue
 			}
 
 			word := t1.String()
-			if isStdLib(word) {
+			if isStdPkgInterface(word) {
 				results = append(results, issue(word, pos, types.NamedStdInterface))
 
 				continue
@@ -167,20 +189,30 @@ func filterInterfaces(pass *analysis.Pass, fl *ast.FieldList) []types.IFace {
 	return results
 }
 
-// isStdLib will run small checks against pkg to find out if  named interface
-// we lookling on comes from a standard library or not.
-func isStdLib(named string) bool {
-	// find last dot index.
+// stdPkgInterface will return package name if tis std lib package
+// or empty string on fail.
+func stdPkgInterface(named string) string {
+	// find last "." index.
 	idx := strings.LastIndex(named, ".")
 	if idx == -1 {
-		return false
+		return ""
 	}
 
-	if _, ok := std[named[0:idx]]; ok {
-		return true
+	return stdPkg(named[0:idx])
+}
+
+// isStdPkgInterface will run small checks against pkg to find out if named
+// interface we looking on - comes from a standard library or not.
+func isStdPkgInterface(namedInterface string) bool {
+	return stdPkgInterface(namedInterface) != ""
+}
+
+func stdPkg(pkg string) string {
+	if _, ok := std[pkg]; ok {
+		return pkg
 	}
 
-	return false
+	return ""
 }
 
 // issue is shortcut that creates issue for next filtering.

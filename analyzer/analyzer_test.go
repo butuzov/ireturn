@@ -23,13 +23,14 @@ const testPackageName = "example"
 // ---------------------------------------------------------- test case --------
 
 type testCase struct {
-	name string
-	meta map[string]string
-	mask []string
+	name string            // test name
+	meta map[string]string // options
+	mask []string          // glob of files/directories we going to analyze
+	pkgm string            // package name, if empty defaults to "example"
 
 	// expectations -----
-	want []string
-	fail error
+	want []string // list of errors
+	fail error    // if linter expected to fail - errors is expected to be non nil
 }
 
 func TestAll(t *testing.T) {
@@ -144,6 +145,7 @@ func TestAll(t *testing.T) {
 		},
 		want: []string{
 			"NamedContext returns interface (context.Context)",
+			"NamedBytes returns interface (io.Writer)",
 			"NamedStdFile returns interface (go/types.Importer)",
 		},
 	})
@@ -174,6 +176,7 @@ func TestAll(t *testing.T) {
 			"newIDoer returns interface (example.iDoer)",
 			"NewNamedStruct returns interface (example.FooerBarer)",
 			"NamedContext returns interface (context.Context)",
+			"NamedBytes returns interface (io.Writer)",
 			"NamedStdFile returns interface (go/types.Importer)",
 		},
 	})
@@ -201,6 +204,18 @@ func TestAll(t *testing.T) {
 		},
 	})
 
+	// tests = append(tests, testCase{
+	// 	name: "Named/allow/(stdmimic)",
+	// 	mask: []string{"internal/io/*"},
+	// 	meta: map[string]string{
+	// 		"allow": "", //
+	// 	},
+	// 	pkgm: "io",
+	// 	want: []string{
+	// 		"Get returns interface (io.Writer)",
+	// 	},
+	// })
+
 	tests = append(tests, testCase{
 		name: "Named Interfaces/regexp/allow",
 		mask: []string{"named_*.go", "github.com/foo/bar/*", "internal/sample/*"},
@@ -213,6 +228,7 @@ func TestAll(t *testing.T) {
 			"newIDoer returns interface (example.iDoer)",
 			"NewNamedStruct returns interface (example.FooerBarer)",
 			"NamedContext returns interface (context.Context)",
+			"NamedBytes returns interface (io.Writer)",
 			"NamedStdFile returns interface (go/types.Importer)",
 		},
 	})
@@ -302,7 +318,11 @@ func (tc testCase) test() func(*testing.T) {
 		}
 
 		st := &spyTest{errors: []error{}}
-		results := analysistest.Run(st, goroot, analyzer, testPackageName)
+		pkgName := testPackageName
+		if tc.pkgm != "" {
+			pkgName = tc.pkgm
+		}
+		results := analysistest.Run(st, goroot, analyzer, pkgName)
 
 		// -------------------------------------------------------- results ----
 
