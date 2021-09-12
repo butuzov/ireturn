@@ -96,7 +96,7 @@ func TestAll(t *testing.T) {
 
 	tests = append(tests, testCase{
 		name: "Error/allow",
-		mask: []string{"/src/errors.go", "go.*"},
+		mask: []string{"errors.go", "go.*"},
 		meta: map[string]string{
 			"allow": types.NameError,
 		},
@@ -122,7 +122,7 @@ func TestAll(t *testing.T) {
 	// but rather we will create new ones that are "external"
 	// 2) * we can't (and shouldn't) specify named global pattern for named.
 	tests = append(tests, testCase{
-		name: "Named Interfaces/(allow*)",
+		name: "Named Interfaces/allow*",
 		mask: []string{"named_*.go", "github.com/foo/bar/*", "internal/sample/*"},
 		meta: map[string]string{
 			"allow": "",
@@ -218,7 +218,7 @@ func TestAll(t *testing.T) {
 	})
 
 	tests = append(tests, testCase{
-		name: "default/all/reject_all_but_named(non_std)",
+		name: "default/all/non_std/reject_all_but_named",
 		mask: []string{"*.go", "github.com/foo/bar/*", "internal/sample/*"},
 		meta: map[string]string{}, // skipping any configuration to run default one.
 		want: []string{
