@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/butuzov/ireturn/types"
+	"github.com/butuzov/ireturn/analyzer/internal/types"
 
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/tools/go/analysis/analysistest"

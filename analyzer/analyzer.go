@@ -8,8 +8,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/butuzov/ireturn/config"
-	"github.com/butuzov/ireturn/types"
+	"github.com/butuzov/ireturn/analyzer/internal/config"
+	"github.com/butuzov/ireturn/analyzer/internal/types"
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"

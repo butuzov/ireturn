@@ -5,7 +5,7 @@ import (
 	"flag"
 	"strings"
 
-	"github.com/butuzov/ireturn/types"
+	"github.com/butuzov/ireturn/analyzer/internal/types"
 )
 
 var ErrCollisionOfInterests = errors.New("can't have both `-accept` and `-reject` specified at same time")
