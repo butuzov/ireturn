@@ -3,7 +3,7 @@ package config
 import (
 	"regexp"
 
-	"github.com/butuzov/ireturn/types"
+	"github.com/butuzov/ireturn/analyzer/internal/types"
 )
 
 // defaultConfig is core of the validation, ...
