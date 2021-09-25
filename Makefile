@@ -25,10 +25,6 @@ cover:
 install:
 	go install -trimpath -v -ldflags="-w -s" ./cmd/ireturn/
 
-e2e: build
-	./scripts/run-e2e-tests.sh
-
-
 bin/goreleaser:
 	curl -fsSL https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh |  sh -s -- -b bin
 
