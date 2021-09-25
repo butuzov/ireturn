@@ -2,7 +2,7 @@
 export PATH   := $(PWD)/bin:$(PATH)                    # ./bin to $PATH
 export SHELL  := bash                                  # Default Shell
 
-GOPKGS := $(shell go list ./... | grep -vE "(testdata)" | tr -s '\n' ',' | sed 's/.\{1\}$$//' )
+GOPKGS := $(shell go list ./... | grep -vE "(cmd|testdata)" | tr -s '\n' ',' | sed 's/.\{1\}$$//' )
 
 
 build:
