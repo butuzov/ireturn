@@ -8,7 +8,7 @@ Accept Interfaces, Return Concrete Types
 You can get `ireturn` with `go install` command.
 
 ```shell
-go install github.com/butuzov/ireturn/cmd/ireturn
+go install github.com/butuzov/ireturn/cmd/ireturn@latest
 ```
 
 ### Compiled Binary
