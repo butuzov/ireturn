@@ -69,17 +69,17 @@ func (d *doer) Do() {/*...*/}
 
 // Good.
 type Doer interface { Doer() }
-type doer struct{}
-func New() *doer { return new(doer)}
-func (d *doer) Do() {/*...*/}
+type IDoer struct{}
+func New() *IDoer { return new(IDoer)}
+func (d *IDoer) Do() {/*...*/}
 
 // Very Good (Verify Interface Compliance in compile time)
-var _ Doer = (*doer)(nil)
+var _ Doer = (*IDoer)(nil)
 
 type Doer interface { Doer() }
-type doer struct{}
-func New() *doer { return new(doer)}
-func (d *doer) Do() {/*...*/}
+type IDoer struct{}
+func New() *IDoer { return new(IDoer)}
+func (d *IDoer) Do() {/*...*/}
 
 ```
 
