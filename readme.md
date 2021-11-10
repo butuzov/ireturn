@@ -63,9 +63,9 @@ You can use shorthand for some types of interfaces:
 ```go
 // Bad.
 type Doer interface { Doer() }
-type doer struct{}
-func New() Doer { return new(doer)}
-func (d *doer) Do() {/*...*/}
+type IDoer struct{}
+func New() Doer { return new(IDoer)}
+func (d *IDoer) Do() {/*...*/}
 
 // Good.
 type Doer interface { Doer() }
