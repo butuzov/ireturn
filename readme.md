@@ -62,13 +62,13 @@ You can use shorthand for some types of interfaces:
 
 ```go
 // Bad.
-type Doer interface { Doer() }
+type Doer interface { Do() }
 type IDoer struct{}
 func New() Doer { return new(IDoer)}
 func (d *IDoer) Do() {/*...*/}
 
 // Good.
-type Doer interface { Doer() }
+type Doer interface { Do() }
 type IDoer struct{}
 func New() *IDoer { return new(IDoer)}
 func (d *IDoer) Do() {/*...*/}
@@ -76,7 +76,7 @@ func (d *IDoer) Do() {/*...*/}
 // Very Good (Verify Interface Compliance in compile time)
 var _ Doer = (*IDoer)(nil)
 
-type Doer interface { Doer() }
+type Doer interface { Do() }
 type IDoer struct{}
 func New() *IDoer { return new(IDoer)}
 func (d *IDoer) Do() {/*...*/}
