@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	"github.com/butuzov/ireturn/analyzer/internal/types"
-
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/tools/go/analysis/analysistest"
 )
@@ -42,6 +41,13 @@ func TestAll(t *testing.T) {
 		meta: map[string]string{},
 		want: []string{},
 	})
+
+	// tests = append(tests, testCase{
+	// 	name: "Generic Interface",
+	// 	mask: []string{"generic.go", "go.*"},
+	// 	meta: map[string]string{},
+	// 	want: []string{},
+	// })
 
 	tests = append(tests, testCase{
 		name: "interface{}/allow",
@@ -204,6 +210,7 @@ func TestAll(t *testing.T) {
 		},
 	})
 
+	// was already commented
 	// tests = append(tests, testCase{
 	// 	name: "Named/allow/(stdmimic)",
 	// 	mask: []string{"internal/io/*"},
@@ -234,10 +241,15 @@ func TestAll(t *testing.T) {
 	})
 
 	tests = append(tests, testCase{
-		name: "default/all/non_std/reject_all_but_named",
+		name: "defaults",
 		mask: []string{"*.go", "github.com/foo/bar/*", "internal/sample/*"},
 		meta: map[string]string{}, // skipping any configuration to run default one.
 		want: []string{
+			"Min returns generic interface (T)",
+			"Min returns generic interface (T)",
+			"Max returns generic interface (foobar)",
+			"Foo returns generic interface (GENERIC)",
+			"SumIntsOrFloats returns generic interface (V)",
 			"s returns interface (github.com/foo/bar.Buzzer)",
 			"New returns interface (github.com/foo/bar.Buzzer)",
 			"NewDeclared returns interface (internal/sample.Doer)",
@@ -261,11 +273,57 @@ func TestAll(t *testing.T) {
 			"errorAliasReturn returns interface (error)",
 			"errorTypeReturn returns interface (error)",
 			"newErrorInterface returns interface (error)",
+			"Min returns generic interface (T)",
+			"Min returns generic interface (T)",
+			"Max returns generic interface (foobar)",
+			"Foo returns generic interface (GENERIC)",
+			"SumIntsOrFloats returns generic interface (V)",
 			"s returns interface (github.com/foo/bar.Buzzer)",
 			"New returns interface (github.com/foo/bar.Buzzer)",
 			"NewDeclared returns interface (internal/sample.Doer)",
 			"newIDoer returns interface (example.iDoer)",
 			"NewNamedStruct returns interface (example.FooerBarer)",
+		},
+	})
+
+	tests = append(tests, testCase{
+		name: "generic/reject",
+		mask: []string{"*.go", "github.com/foo/bar/*", "internal/sample/*"},
+		meta: map[string]string{
+			"reject": types.NameGeneric, // allow only generic interfaces
+		},
+		want: []string{
+			"Min returns generic interface (T)",
+			"Min returns generic interface (T)",
+			"Max returns generic interface (foobar)",
+			"Foo returns generic interface (GENERIC)",
+			"SumIntsOrFloats returns generic interface (V)",
+		},
+	})
+
+	tests = append(tests, testCase{
+		name: "generic/allow",
+		mask: []string{"*.go", "github.com/foo/bar/*", "internal/sample/*"},
+		meta: map[string]string{
+			"allow": types.NameGeneric, // allow only generic interfaces
+		},
+		want: []string{
+			"NewanonymousInterface returns interface (anonymous interface)",
+			"dissAllowDirective2 returns interface (interface{})",
+			"dissAllowDirective6 returns interface (interface{})",
+			"fooInterface returns interface (interface{})",
+			"errorReturn returns interface (error)",
+			"errorAliasReturn returns interface (error)",
+			"errorTypeReturn returns interface (error)",
+			"newErrorInterface returns interface (error)",
+			"s returns interface (github.com/foo/bar.Buzzer)",
+			"New returns interface (github.com/foo/bar.Buzzer)",
+			"NewDeclared returns interface (internal/sample.Doer)",
+			"newIDoer returns interface (example.iDoer)",
+			"NewNamedStruct returns interface (example.FooerBarer)",
+			"NamedContext returns interface (context.Context)",
+			"NamedBytes returns interface (io.Writer)",
+			"NamedStdFile returns interface (go/types.Importer)",
 		},
 	})
 
@@ -350,7 +408,7 @@ func directory(t *testing.T) (goroot, srcdir string, err error) {
 	goroot = t.TempDir()
 	srcdir = filepath.Join(goroot, "src")
 
-	if err := os.MkdirAll(srcdir, 0777); err != nil {
+	if err := os.MkdirAll(srcdir, 0o777); err != nil {
 		return "", "", err
 	}
 
@@ -375,7 +433,7 @@ func (tc testCase) xerox(root string) error {
 			}
 
 			// create if no exists
-			if err := os.MkdirAll(filepath.Join(root, directory), 0777); err != nil {
+			if err := os.MkdirAll(filepath.Join(root, directory), 0o777); err != nil {
 				return err
 			}
 
@@ -394,7 +452,7 @@ func cp(src, dst string) error {
 		return err
 	} else if data, err := ioutil.ReadFile(location); err != nil {
 		return err
-	} else if err := ioutil.WriteFile(filepath.Join(dst, filepath.Base(src)), data, 0600); err != nil {
+	} else if err := ioutil.WriteFile(filepath.Join(dst, filepath.Base(src)), data, 0o600); err != nil {
 		return err
 	}
 

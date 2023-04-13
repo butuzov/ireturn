@@ -41,7 +41,7 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 
 	ins, _ := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
-	// 00. does file have dot-imported stadard packages?
+	// 00. does file have dot-imported standard packages?
 	dotImportedStd := make(map[string]struct{})
 	ins.Preorder([]ast.Node{(*ast.ImportSpec)(nil)}, func(node ast.Node) {
 		i, _ := node.(*ast.ImportSpec)
@@ -66,16 +66,24 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 			return
 		}
 
-		// 004. Filtering Results.
-		for _, i := range filterInterfaces(pass, f.Type.Results, dotImportedStd) {
+		var message string
 
+		// 004. Filtering Results.
+		for _, i := range filterInterfaces(pass, f.Type, dotImportedStd) {
+			// spew.Dump(i)
 			if a.handler.IsValid(i) {
 				continue
 			}
 
+			if i.Type == types.Generic {
+				message = fmt.Sprintf("%s returns generic interface (%s)", f.Name.Name, i.Name)
+			} else {
+				message = fmt.Sprintf("%s returns interface (%s)", f.Name.Name, i.Name)
+			}
+
 			a.found = append(a.found, analysis.Diagnostic{ //nolint: exhaustivestruct
 				Pos:     f.Pos(),
-				Message: fmt.Sprintf("%s returns interface (%s)", f.Name.Name, i.Name),
+				Message: message,
 			})
 		}
 	})
@@ -122,10 +130,16 @@ func flags() flag.FlagSet {
 	return *set
 }
 
-func filterInterfaces(p *analysis.Pass, fl *ast.FieldList, di map[string]struct{}) []types.IFace {
+func filterInterfaces(p *analysis.Pass, ft *ast.FuncType, di map[string]struct{}) []types.IFace {
 	var results []types.IFace
 
-	for pos, el := range fl.List {
+	if ft.Results == nil { // this can't happen, but double checking.
+		return results
+	}
+
+	tp := newTypeParams(ft.TypeParams)
+
+	for pos, el := range ft.Results.List {
 		switch v := el.Type.(type) {
 		// ----- empty or anonymous interfaces
 		case *ast.InterfaceType:
@@ -149,13 +163,17 @@ func filterInterfaces(p *analysis.Pass, fl *ast.FieldList, di map[string]struct{
 			// only build in interface is error
 			if obj := gotypes.Universe.Lookup(word); obj != nil {
 				results = append(results, issue(obj.Name(), pos, types.ErrorInterface))
+				continue
+			}
 
+			// found in type params
+			if tp.In(word) {
+				results = append(results, issue(word, pos, types.Generic))
 				continue
 			}
 
 			// is it dot-imported package?
 			// handling cases when stdlib package imported via "." dot-import
-			//
 			if len(di) > 0 {
 				name := stdPkgInterface(word)
 				if _, ok := di[name]; ok {
@@ -178,7 +196,6 @@ func filterInterfaces(p *analysis.Pass, fl *ast.FieldList, di map[string]struct{
 			word := t1.String()
 			if isStdPkgInterface(word) {
 				results = append(results, issue(word, pos, types.NamedStdInterface))
-
 				continue
 			}
 
