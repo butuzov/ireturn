@@ -10,7 +10,7 @@ import (
 
 var ErrCollisionOfInterests = errors.New("can't have both `-accept` and `-reject` specified at same time")
 
-//nolint: exhaustivestruct
+// nolint: exhaustivestruct
 func DefaultValidatorConfig() *allowConfig {
 	return allowAll([]string{
 		types.NameEmpty,  // "empty": empty interfaces (interface{})
@@ -40,7 +40,7 @@ func New(fs *flag.FlagSet) (interface{}, error) {
 		return rejectAll(rejectList), nil
 	}
 
-	// can have none at same time.
+	// can have none (defaults are used) at same time.
 	return nil, nil
 }
 
