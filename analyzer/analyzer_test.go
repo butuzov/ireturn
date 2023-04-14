@@ -246,7 +246,8 @@ func TestAll(t *testing.T) {
 		meta: map[string]string{}, // skipping any configuration to run default one.
 		want: []string{
 			"Min returns generic interface (T)",
-			"Min returns generic interface (T)",
+			"MixedReturnParameters returns generic interface (T)",
+			"MixedReturnParameters returns generic interface (K)",
 			"Max returns generic interface (foobar)",
 			"Foo returns generic interface (GENERIC)",
 			"SumIntsOrFloats returns generic interface (V)",
@@ -274,7 +275,8 @@ func TestAll(t *testing.T) {
 			"errorTypeReturn returns interface (error)",
 			"newErrorInterface returns interface (error)",
 			"Min returns generic interface (T)",
-			"Min returns generic interface (T)",
+			"MixedReturnParameters returns generic interface (T)",
+			"MixedReturnParameters returns generic interface (K)",
 			"Max returns generic interface (foobar)",
 			"Foo returns generic interface (GENERIC)",
 			"SumIntsOrFloats returns generic interface (V)",
@@ -294,7 +296,8 @@ func TestAll(t *testing.T) {
 		},
 		want: []string{
 			"Min returns generic interface (T)",
-			"Min returns generic interface (T)",
+			"MixedReturnParameters returns generic interface (T)",
+			"MixedReturnParameters returns generic interface (K)",
 			"Max returns generic interface (foobar)",
 			"Foo returns generic interface (GENERIC)",
 			"SumIntsOrFloats returns generic interface (V)",

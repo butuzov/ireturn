@@ -2,7 +2,6 @@ package analyzer
 
 import (
 	"flag"
-	"fmt"
 	"go/ast"
 	gotypes "go/types"
 	"strings"
@@ -66,25 +65,25 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 			return
 		}
 
-		var message string
+		seen := make(map[string]bool, 4)
 
 		// 004. Filtering Results.
-		for _, i := range filterInterfaces(pass, f.Type, dotImportedStd) {
-			// spew.Dump(i)
-			if a.handler.IsValid(i) {
+		for _, issue := range filterInterfaces(pass, f.Type, dotImportedStd) {
+
+			if a.handler.IsValid(issue) {
 				continue
 			}
 
-			if i.Type == types.Generic {
-				message = fmt.Sprintf("%s returns generic interface (%s)", f.Name.Name, i.Name)
-			} else {
-				message = fmt.Sprintf("%s returns interface (%s)", f.Name.Name, i.Name)
-			}
+			issue.Enrich(f)
 
-			a.found = append(a.found, analysis.Diagnostic{ //nolint: exhaustivestruct
-				Pos:     f.Pos(),
-				Message: message,
-			})
+			key := issue.HashString()
+
+			if ok := seen[key]; ok {
+				continue
+			}
+			seen[key] = true
+
+			a.found = append(a.found, issue.ExportDiagnostic())
 		}
 	})
 
@@ -139,17 +138,17 @@ func filterInterfaces(p *analysis.Pass, ft *ast.FuncType, di map[string]struct{}
 
 	tp := newTypeParams(ft.TypeParams)
 
-	for pos, el := range ft.Results.List {
+	for _, el := range ft.Results.List {
 		switch v := el.Type.(type) {
 		// ----- empty or anonymous interfaces
 		case *ast.InterfaceType:
 
 			if len(v.Methods.List) == 0 {
-				results = append(results, issue("interface{}", pos, types.EmptyInterface))
+				results = append(results, types.NewIssue("interface{}", types.EmptyInterface))
 				continue
 			}
 
-			results = append(results, issue("anonymous interface", pos, types.AnonInterface))
+			results = append(results, types.NewIssue("anonymous interface", types.AnonInterface))
 
 		// ------ Errors and interfaces from same package
 		case *ast.Ident:
@@ -162,13 +161,13 @@ func filterInterfaces(p *analysis.Pass, ft *ast.FuncType, di map[string]struct{}
 			word := t1.String()
 			// only build in interface is error
 			if obj := gotypes.Universe.Lookup(word); obj != nil {
-				results = append(results, issue(obj.Name(), pos, types.ErrorInterface))
+				results = append(results, types.NewIssue(obj.Name(), types.ErrorInterface))
 				continue
 			}
 
 			// found in type params
 			if tp.In(word) {
-				results = append(results, issue(word, pos, types.Generic))
+				results = append(results, types.NewIssue(word, types.Generic))
 				continue
 			}
 
@@ -177,13 +176,13 @@ func filterInterfaces(p *analysis.Pass, ft *ast.FuncType, di map[string]struct{}
 			if len(di) > 0 {
 				name := stdPkgInterface(word)
 				if _, ok := di[name]; ok {
-					results = append(results, issue(word, pos, types.NamedStdInterface))
+					results = append(results, types.NewIssue(word, types.NamedStdInterface))
 
 					continue
 				}
 			}
 
-			results = append(results, issue(word, pos, types.NamedInterface))
+			results = append(results, types.NewIssue(word, types.NamedInterface))
 
 		// ------- standard library and 3rd party interfaces
 		case *ast.SelectorExpr:
@@ -195,11 +194,11 @@ func filterInterfaces(p *analysis.Pass, ft *ast.FuncType, di map[string]struct{}
 
 			word := t1.String()
 			if isStdPkgInterface(word) {
-				results = append(results, issue(word, pos, types.NamedStdInterface))
+				results = append(results, types.NewIssue(word, types.NamedStdInterface))
 				continue
 			}
 
-			results = append(results, issue(word, pos, types.NamedInterface))
+			results = append(results, types.NewIssue(word, types.NamedInterface))
 		}
 	}
 
@@ -230,13 +229,4 @@ func stdPkg(pkg string) string {
 	}
 
 	return ""
-}
-
-// issue is shortcut that creates issue for next filtering.
-func issue(name string, pos int, interfaceType types.IType) types.IFace {
-	return types.IFace{
-		Name: name,
-		Pos:  pos,
-		Type: interfaceType,
-	}
 }
