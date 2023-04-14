@@ -11,6 +11,10 @@ func Min[T Numeric](x T, y T) (T, T) {
 	return x, x
 }
 
+func MixedReturnParameters[T, K Numeric](x T, y K) (T, K, T, K, K, T) {
+	return x, y, x, y, y, x
+}
+
 func Max[foobar Numeric](x foobar, y foobar) foobar {
 	if x < y {
 		return y
