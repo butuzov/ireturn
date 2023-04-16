@@ -5,7 +5,7 @@ Accept Interfaces, Return Concrete Types
 
 ## Install
 
-You can get `ireturn` with `go install` command.
+You can get `ireturn` with `go install` command. Go1.18+ required.
 
 ```shell
 go install github.com/butuzov/ireturn/cmd/ireturn@latest
@@ -22,7 +22,7 @@ Or you can download the suitable binary from the [releases](https://github.com/b
 * `accept` - accept-list of the comma-separated interfaces.
 * `reject` - reject-list of the comma-separated interfaces.
 
-By default, `ireturn` will accept all errors (`error`), empty interfaces (`interfaces{}`), anonymous interfaces declarations ( `interface { methodName() }` ), and interfaces from standard library as a valid ones.
+By default, `ireturn` will accept all errors (`error`), empty interfaces (`interfaces{}`), anonymous interfaces declarations ( `interface { methodName() }` ), interfaces from standard library, and generic interfaces (introduced in go1.18) as a valid ones.
 
 Interfaces in the list can be provided as regexps or keywords ("error" for "error", "empty" for `interface{}`, `anon` for anonymous interfaces):
 
@@ -32,19 +32,20 @@ ireturn --accept="\\.Doer,error,empty" ./...
 # reject standard library interfaces and plinko.Payload as valid ones
 ireturn --reject="std,github.com/shipt/plinko.Payload" ./...
 # default settings allows errors, empty interfaces, anonymous declarations and standard library
-ireturn ./..
+ireturn ./...
 # checkfor non idiomatic interface names
-ireturn -allow="error,empty,anon,stdlib,.*(or|er)$" ./...
+ireturn -allow="error,generic,anon,stdlib,.*(or|er)$" ./...
 ```
 
 ### Keywords
 
 You can use shorthand for some types of interfaces:
 
-* `error` for `error` type
 * `empty` for `interface{}` type
 * `anon` for anonymous declarations `interface{ someMethod() }`
-* `std` for all interfaces from standard library.
+* `error` for `error` type
+* `stdlib` for all interfaces from standard library.
+* `generic` for generic interfaces (added in go1.18)
 
 ### Disable directive
 
