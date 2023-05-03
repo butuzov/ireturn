@@ -32,4 +32,4 @@ bin/goreleaser:
 test-release: bin/goreleaser
 	goreleaser release --help
 	goreleaser release -f .goreleaser.yaml \
-		--skip-validate --skip-publish --rm-dist
+		--skip-validate --skip-publish --clean
