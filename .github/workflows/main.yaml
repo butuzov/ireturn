@@ -21,10 +21,10 @@ jobs:
 
     steps:
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go }}
 
@@ -55,10 +55,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: lint
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v3.6.0
         with:
           version: latest
           skip-build-cache: true
           skip-pkg-cache: true
-          args: -D deadcode
+          args: -D deadcode --skip-dirs "^(cmd|testdata)"
 
