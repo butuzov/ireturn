@@ -26,7 +26,7 @@ install:
 	go install -trimpath -v -ldflags="-w -s" ./cmd/ireturn/
 
 bin/goreleaser:
-	@curl -Ls https://github.com/goreleaser/goreleaser/releases/download/v1.17.2/goreleaser_Darwin_all.tar.gz | tar -zOxf - goreleaser > ./bin/goreleaser
+	@curl -Ls https://github.com/goreleaser/goreleaser/releases/download/v1.18.2/goreleaser_Darwin_all.tar.gz | tar -zOxf - goreleaser > ./bin/goreleaser
 	chmod 0755 ./bin/goreleaser
 
 test-release: bin/goreleaser
