@@ -2,9 +2,6 @@
 
 Accept Interfaces, Return Concrete Types
 
-## 🇺🇦 PLEASE HELP ME 🇺🇦
-Fundrise for scout drone **DJI Matrice 30T** See more details at [butuzov/README.md](https://github.com/butuzov/butuzov/)
-
 ## Install
 
 You can get `ireturn` with `go install` command. Go1.18+ required.
