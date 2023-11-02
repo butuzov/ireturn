@@ -1,4 +1,4 @@
-FROM golang:1.17-alpine as builder
+FROM golang:1.21-alpine as builder
 
 WORKDIR /build
 RUN   apk add --no-cache upx
@@ -9,7 +9,7 @@ RUN   go build -trimpath -o bin/ireturn ./cmd/ireturn
 RUN   upx --brute /build/bin/ireturn
 
 
-FROM golang:1.17-alpine as base
+FROM golang:1.21-alpine as base
 WORKDIR    /
 COPY       --from=builder /build/bin/ireturn ireturn
 VOLUME     /app
