@@ -102,6 +102,23 @@ func TestAll(t *testing.T) {
 	})
 
 	tests = append(tests, testCase{
+		name: "Disallow Directives 2",
+		mask: []string{"disallow_directive_ok.go", "go.*"},
+		meta: map[string]string{
+			"reject":   types.NameEmpty,
+			"nonolint": "true",
+		},
+		want: []string{
+			"dissAllowDirective1 returns interface (interface{})",
+			"dissAllowDirective2 returns interface (interface{})",
+			"dissAllowDirective3 returns interface (interface{})",
+			"dissAllowDirective4 returns interface (interface{})",
+			"dissAllowDirective5 returns interface (interface{})",
+			"dissAllowDirective6 returns interface (interface{})",
+		},
+	})
+
+	tests = append(tests, testCase{
 		name: "Error/allow",
 		mask: []string{"errors.go", "go.*"},
 		meta: map[string]string{
