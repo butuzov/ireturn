@@ -2,10 +2,15 @@ package example
 
 type (
 	iDoer         interface{}
+	iDoerAny      any
 	iDoerConcreat int
 )
 
 func newIDoer() iDoer {
+	return iDoerConcreat(0)
+}
+
+func newIDoerAny() iDoerAny {
 	return iDoerConcreat(0)
 }
 

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"go/ast"
 	gotypes "go/types"
+	"runtime"
 	"strings"
 	"sync"
 
@@ -70,7 +71,6 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 
 		// 004. Filtering Results.
 		for _, issue := range filterInterfaces(pass, f.Type, dotImportedStd) {
-
 			if a.handler.IsValid(issue) {
 				continue
 			}
@@ -146,13 +146,10 @@ func filterInterfaces(p *analysis.Pass, ft *ast.FuncType, di map[string]struct{}
 		return results
 	}
 
-	tp := newTypeParams(ft.TypeParams)
-
 	for _, el := range ft.Results.List {
 		switch v := el.Type.(type) {
 		// ----- empty or anonymous interfaces
 		case *ast.InterfaceType:
-
 			if len(v.Methods.List) == 0 {
 				results = append(results, types.NewIssue("interface{}", types.EmptyInterface))
 				continue
@@ -164,35 +161,65 @@ func filterInterfaces(p *analysis.Pass, ft *ast.FuncType, di map[string]struct{}
 		case *ast.Ident:
 
 			t1 := p.TypesInfo.TypeOf(el.Type)
-			if !gotypes.IsInterface(t1.Underlying()) {
+			val, ok := t1.Underlying().(*gotypes.Interface)
+			if !ok {
 				continue
 			}
 
-			word := t1.String()
-			// only build in interface is error
-			if obj := gotypes.Universe.Lookup(word); obj != nil {
-				results = append(results, types.NewIssue(obj.Name(), types.ErrorInterface))
+			var (
+				name    = t1.String()
+				isNamed = strings.Contains(name, ".")
+				isEmpty = val.Empty()
+			)
+
+			// catching any
+			if isEmpty && name == "any" {
+				results = append(results, types.NewIssue(name, types.EmptyInterface))
 				continue
 			}
 
-			// found in type params
-			if tp.In(word) {
-				results = append(results, types.NewIssue(word, types.Generic))
+			// NOTE: FIXED!
+			if name == "error" {
+				results = append(results, types.NewIssue(name, types.ErrorInterface))
+				continue
+			}
+
+			if !isNamed {
+
+				typeParams := val.String()
+				prefix, suffix := "interface{", "}"
+				if strings.HasPrefix(typeParams, prefix) { // nolint: gosimple
+					typeParams = typeParams[len(prefix):]
+				}
+				if strings.HasSuffix(typeParams, suffix) {
+					typeParams = typeParams[:len(typeParams)-1]
+				}
+
+				goVersion := runtime.Version()
+				if strings.HasPrefix(goVersion, "go1.18") || strings.HasPrefix(goVersion, "go1.19") {
+					typeParams = strings.ReplaceAll(typeParams, "|", " | ")
+				}
+
+				results = append(results, types.IFace{
+					Name:   name,
+					Type:   types.Generic,
+					OfType: typeParams,
+				})
 				continue
 			}
 
 			// is it dot-imported package?
 			// handling cases when stdlib package imported via "." dot-import
 			if len(di) > 0 {
-				name := stdPkgInterface(word)
-				if _, ok := di[name]; ok {
-					results = append(results, types.NewIssue(word, types.NamedStdInterface))
+				pkgName := stdPkgInterface(name)
+				if _, ok := di[pkgName]; ok {
+					results = append(results, types.NewIssue(name, types.NamedStdInterface))
 
 					continue
 				}
 			}
 
-			results = append(results, types.NewIssue(word, types.NamedInterface))
+			results = append(results, types.NewIssue(name, types.NamedInterface))
 
 		// ------- standard library and 3rd party interfaces
 		case *ast.SelectorExpr:
