@@ -21,7 +21,7 @@ Or you can download the suitable binary from the [releases](https://github.com/b
 * `accept` - accept-list of the comma-separated interfaces.
 * `reject` - reject-list of the comma-separated interfaces.
 
-By default, `ireturn` will accept all errors (`error`), empty interfaces (`interfaces{}`), anonymous interfaces declarations ( `interface { methodName() }` ), interfaces from standard library, and generic interfaces (introduced in go1.18) as a valid ones.
+By default, `ireturn` will accept all errors (`error`), empty interfaces (`interfaces{}`), anonymous interfaces declarations ( `interface { methodName() }` ) and interfaces from standard library as a valid ones.
 
 Interfaces in the list can be provided as regexps or keywords ("error" for "error", "empty" for `interface{}`, `anon` for anonymous interfaces):
 
