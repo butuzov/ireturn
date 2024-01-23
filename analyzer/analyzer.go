@@ -186,8 +186,13 @@ func filterInterfaces(p *analysis.Pass, ft *ast.FuncType, di map[string]struct{}
 			if !isNamed {
 
 				typeParams := val.String()
-				typeParams, _ = strings.CutPrefix(typeParams, "interface{")
-				typeParams, _ = strings.CutSuffix(typeParams, "}")
+				prefix, suffix := "interface{", "}"
+				if strings.HasPrefix(typeParams, prefix) { // nolint: gosimple
+					typeParams = typeParams[len(prefix):]
+				}
+				if strings.HasSuffix(typeParams, suffix) {
+					typeParams = typeParams[:len(typeParams)-1]
+				}
 
 				results = append(results, types.IFace{
 					Name:   name,
