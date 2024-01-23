@@ -139,6 +139,7 @@ func TestAll(t *testing.T) {
 			"New returns interface (github.com/foo/bar.Buzzer)",
 			"NewDeclared returns interface (internal/sample.Doer)",
 			"newIDoer returns interface (example.iDoer)",
+			"newIDoerAny returns interface (example.iDoerAny)",
 			"NewNamedStruct returns interface (example.FooerBarer)",
 		},
 	})
@@ -167,6 +168,7 @@ func TestAll(t *testing.T) {
 			"New returns interface (github.com/foo/bar.Buzzer)",
 			"NewDeclared returns interface (internal/sample.Doer)",
 			"newIDoer returns interface (example.iDoer)",
+			"newIDoerAny returns interface (example.iDoerAny)",
 			"NewNamedStruct returns interface (example.FooerBarer)",
 		},
 	})
@@ -180,6 +182,7 @@ func TestAll(t *testing.T) {
 		want: []string{
 			"NewDeclared returns interface (internal/sample.Doer)",
 			"newIDoer returns interface (example.iDoer)",
+			"newIDoerAny returns interface (example.iDoerAny)",
 			"NewNamedStruct returns interface (example.FooerBarer)",
 			"NamedContext returns interface (context.Context)",
 			"NamedBytes returns interface (io.Writer)",
@@ -210,19 +213,6 @@ func TestAll(t *testing.T) {
 		},
 	})
 
-	// was already commented
-	// tests = append(tests, testCase{
-	// 	name: "Named/allow/(stdmimic)",
-	// 	mask: []string{"internal/io/*"},
-	// 	meta: map[string]string{
-	// 		"allow": "", //
-	// 	},
-	// 	pkgm: "io",
-	// 	want: []string{
-	// 		"Get returns interface (io.Writer)",
-	// 	},
-	// })
-
 	tests = append(tests, testCase{
 		name: "Named Interfaces/regexp/allow",
 		mask: []string{"named_*.go", "github.com/foo/bar/*", "internal/sample/*"},
@@ -233,6 +223,7 @@ func TestAll(t *testing.T) {
 			"s returns interface (github.com/foo/bar.Buzzer)",
 			"New returns interface (github.com/foo/bar.Buzzer)",
 			"newIDoer returns interface (example.iDoer)",
+			"newIDoerAny returns interface (example.iDoerAny)",
 			"NewNamedStruct returns interface (example.FooerBarer)",
 			"NamedContext returns interface (context.Context)",
 			"NamedBytes returns interface (io.Writer)",
@@ -245,16 +236,20 @@ func TestAll(t *testing.T) {
 		mask: []string{"*.go", "github.com/foo/bar/*", "internal/sample/*"},
 		meta: map[string]string{}, // skipping any configuration to run default one.
 		want: []string{
-			"Min returns generic interface (T)",
-			"MixedReturnParameters returns generic interface (T)",
-			"MixedReturnParameters returns generic interface (K)",
-			"Max returns generic interface (foobar)",
-			"Foo returns generic interface (GENERIC)",
-			"SumIntsOrFloats returns generic interface (V)",
+			"Min returns generic interface (T) of type param ~int | ~float64 | ~float32",
+			"MixedReturnParameters returns generic interface (T) of type param ~int | ~float64 | ~float32",
+			"MixedReturnParameters returns generic interface (K) of type param ~int | ~float64 | ~float32",
+			"Max returns generic interface (foobar) of type param ~int | ~float64 | ~float32",
+			"SumIntsOrFloats returns generic interface (V) of type param int64 | float64",
+			"FuncWithGenericAny_NamedReturn returns generic interface (T_ANY) of type param any",
+			"FuncWithGenericAny returns generic interface (T_ANY) of type param any",
+			"Get returns generic interface (V_COMPARABLE) of type param comparable",
+			"Get returns generic interface (V_ANY) of type param any",
 			"s returns interface (github.com/foo/bar.Buzzer)",
 			"New returns interface (github.com/foo/bar.Buzzer)",
 			"NewDeclared returns interface (internal/sample.Doer)",
 			"newIDoer returns interface (example.iDoer)",
+			"newIDoerAny returns interface (example.iDoerAny)",
 			"NewNamedStruct returns interface (example.FooerBarer)",
 		},
 	})
@@ -263,7 +258,7 @@ func TestAll(t *testing.T) {
 		name: "all/stdlib/allow",
 		mask: []string{"*.go", "github.com/foo/bar/*", "internal/sample/*"},
 		meta: map[string]string{
-			"allow": types.NameStdLib, // allow only interfaces from standard library
+			"allow": types.NameStdLib, // allow only interfaces from standard library (e.g. io.Writer, fmt.Stringer)
 		},
 		want: []string{
 			"NewanonymousInterface returns interface (anonymous interface)",
@@ -274,33 +269,43 @@ func TestAll(t *testing.T) {
 			"errorAliasReturn returns interface (error)",
 			"errorTypeReturn returns interface (error)",
 			"newErrorInterface returns interface (error)",
-			"Min returns generic interface (T)",
-			"MixedReturnParameters returns generic interface (T)",
-			"MixedReturnParameters returns generic interface (K)",
-			"Max returns generic interface (foobar)",
-			"Foo returns generic interface (GENERIC)",
-			"SumIntsOrFloats returns generic interface (V)",
+			"Min returns generic interface (T) of type param ~int | ~float64 | ~float32",
+			"MixedReturnParameters returns generic interface (T) of type param ~int | ~float64 | ~float32",
+			"MixedReturnParameters returns generic interface (K) of type param ~int | ~float64 | ~float32",
+			"Max returns generic interface (foobar) of type param ~int | ~float64 | ~float32",
+			"SumIntsOrFloats returns generic interface (V) of type param int64 | float64",
+			"FuncWithGenericAny_NamedReturn returns generic interface (T_ANY) of type param any",
+			"FuncWithGenericAny returns generic interface (T_ANY) of type param any",
+			"Get returns generic interface (V_COMPARABLE) of type param comparable",
+			"Get returns generic interface (V_ANY) of type param any",
+			"FunctionAny returns interface (any)",
+			"FunctionInterface returns interface (interface{})",
 			"s returns interface (github.com/foo/bar.Buzzer)",
 			"New returns interface (github.com/foo/bar.Buzzer)",
 			"NewDeclared returns interface (internal/sample.Doer)",
 			"newIDoer returns interface (example.iDoer)",
+			"newIDoerAny returns interface (example.iDoerAny)",
 			"NewNamedStruct returns interface (example.FooerBarer)",
 		},
 	})
 
+	// Rejecting Only Generic Returns
 	tests = append(tests, testCase{
 		name: "generic/reject",
 		mask: []string{"*.go", "github.com/foo/bar/*", "internal/sample/*"},
 		meta: map[string]string{
-			"reject": types.NameGeneric, // allow only generic interfaces
+			"reject": types.NameGeneric, // reject only generic interfaces
 		},
 		want: []string{
-			"Min returns generic interface (T)",
-			"MixedReturnParameters returns generic interface (T)",
-			"MixedReturnParameters returns generic interface (K)",
-			"Max returns generic interface (foobar)",
-			"Foo returns generic interface (GENERIC)",
-			"SumIntsOrFloats returns generic interface (V)",
+			"Min returns generic interface (T) of type param ~int | ~float64 | ~float32",
+			"MixedReturnParameters returns generic interface (T) of type param ~int | ~float64 | ~float32",
+			"MixedReturnParameters returns generic interface (K) of type param ~int | ~float64 | ~float32",
+			"Max returns generic interface (foobar) of type param ~int | ~float64 | ~float32",
+			"SumIntsOrFloats returns generic interface (V) of type param int64 | float64",
+			"FuncWithGenericAny_NamedReturn returns generic interface (T_ANY) of type param any",
+			"FuncWithGenericAny returns generic interface (T_ANY) of type param any",
+			"Get returns generic interface (V_COMPARABLE) of type param comparable",
+			"Get returns generic interface (V_ANY) of type param any",
 		},
 	})
 
@@ -319,10 +324,13 @@ func TestAll(t *testing.T) {
 			"errorAliasReturn returns interface (error)",
 			"errorTypeReturn returns interface (error)",
 			"newErrorInterface returns interface (error)",
+			"FunctionAny returns interface (any)",
+			"FunctionInterface returns interface (interface{})",
 			"s returns interface (github.com/foo/bar.Buzzer)",
 			"New returns interface (github.com/foo/bar.Buzzer)",
 			"NewDeclared returns interface (internal/sample.Doer)",
 			"newIDoer returns interface (example.iDoer)",
+			"newIDoerAny returns interface (example.iDoerAny)",
 			"NewNamedStruct returns interface (example.FooerBarer)",
 			"NamedContext returns interface (context.Context)",
 			"NamedBytes returns interface (io.Writer)",
