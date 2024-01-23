@@ -4,6 +4,7 @@ import (
 	"flag"
 	"go/ast"
 	gotypes "go/types"
+	"runtime"
 	"strings"
 	"sync"
 
@@ -192,6 +193,11 @@ func filterInterfaces(p *analysis.Pass, ft *ast.FuncType, di map[string]struct{}
 				}
 				if strings.HasSuffix(typeParams, suffix) {
 					typeParams = typeParams[:len(typeParams)-1]
+				}
+
+				goVersion := runtime.Version()
+				if strings.HasPrefix(goVersion, "go1.18") || strings.HasPrefix(goVersion, "go1.19") {
+					typeParams = strings.ReplaceAll(typeParams, "|", " | ")
 				}
 
 				results = append(results, types.IFace{
