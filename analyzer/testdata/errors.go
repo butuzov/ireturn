@@ -28,6 +28,7 @@ func newErrorInterface() error {
 
 var _ error = (*errorInterface)(nil)
 
+// never suppose to be linted
 func newErrorInterfaceConcrete() *errorInterface {
 	return &errorInterface{}
 }
