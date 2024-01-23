@@ -23,10 +23,11 @@ type validator interface {
 }
 
 type analyzer struct {
-	once    sync.Once
-	mu      sync.RWMutex
-	handler validator
-	err     error
+	once          sync.Once
+	mu            sync.RWMutex
+	handler       validator
+	err           error
+	diabledNolint bool
 
 	found []analysis.Diagnostic
 }
@@ -62,8 +63,7 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 		}
 
 		// 003. Is it allowed to be checked?
-		// TODO(butuzov): add inline comment
-		if hasDisallowDirective(f.Doc) {
+		if !a.diabledNolint && hasDisallowDirective(f.Doc) {
 			return
 		}
 
@@ -112,6 +112,13 @@ func (a *analyzer) readConfiguration(fs *flag.FlagSet) {
 		return
 	}
 
+	// First: checking nonolint directive
+	val := fs.Lookup("nonolint")
+	if val != nil {
+		a.diabledNolint = fs.Lookup("nonolint").Value.String() == "true"
+	}
+
+	// Second: validators implementation next
 	if validatorImpl, ok := cnf.(validator); ok {
 		a.handler = validatorImpl
 		return
@@ -136,6 +143,7 @@ func flags() flag.FlagSet {
 	set := flag.NewFlagSet("", flag.PanicOnError)
 	set.String("allow", "", "accept-list of the comma-separated interfaces")
 	set.String("reject", "", "reject-list of the comma-separated interfaces")
+	set.Bool("nonolint", false, "disable nolint checks")
 	return *set
 }
 
