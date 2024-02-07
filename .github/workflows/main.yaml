@@ -17,7 +17,7 @@ jobs:
       matrix:
         go:
           - "1.18"
-          - "1.19" 
+          - "1.19"
           - "1.20"
           - "1.21"
           - "1.22"
@@ -43,9 +43,8 @@ jobs:
       - run: make tests
 
       - name: Install goveralls
-        env: { GO111MODULE: "off" }
         if: matrix.go == '1.22'
-        run: go get github.com/mattn/goveralls
+        run: go install github.com/mattn/goveralls@latest
 
       - name: Coverage - Sending Report to Coveral
         if: matrix.go == '1.22'
