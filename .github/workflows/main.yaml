@@ -20,6 +20,7 @@ jobs:
           - "1.19"
           - "1.20"
           - "1.21"
+          - "1.22"
 
     steps:
 
@@ -42,12 +43,11 @@ jobs:
       - run: make tests
 
       - name: Install goveralls
-        env: { GO111MODULE: "off" }
-        if: matrix.go == '1.21'
-        run: go get github.com/mattn/goveralls
+        if: matrix.go == '1.22'
+        run: go install github.com/mattn/goveralls@latest
 
       - name: Coverage - Sending Report to Coveral
-        if: matrix.go == '1.21'
+        if: matrix.go == '1.22'
         env:
           COVERALLS_TOKEN: ${{ secrets.github_token }}
         run: goveralls -coverprofile=coverage.cov -service=github
