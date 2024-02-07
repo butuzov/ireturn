@@ -2,9 +2,6 @@
 export PATH   := $(PWD)/bin:$(PATH)                    # ./bin to $PATH
 export SHELL  := bash                                  # Default Shell
 
-GOPKGS := $(shell go list ./... | grep -vE "(cmd|testdata)" | tr -s '\n' ',' | sed 's/.\{1\}$$//' )
-
-
 build:
 	@ go build -trimpath -o bin/ireturn ./cmd/ireturn/
 
@@ -14,7 +11,7 @@ tests:
 		-parallel=2 \
 		-timeout=1m \
 		-covermode=atomic \
-		-coverpkg=$(GOPKGS) -coverprofile=coverage.cov ./...
+		-coverprofile=coverage.cov ./...
 
 lints:
 	golangci-lint run --no-config ./... -D deadcode
