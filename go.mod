@@ -3,7 +3,7 @@ module github.com/butuzov/ireturn
 go 1.18
 
 require (
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	golang.org/x/tools v0.17.0
 )
 
