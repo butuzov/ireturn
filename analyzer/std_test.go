@@ -19,7 +19,7 @@ func Test_isStdLib(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got := isStdPkgInterface(name)
 			assert.Equal(t, got, want,
-				"pkg %s doens't match expectations (got %v vs want %v)", name, got, want)
+				"pkg %s doesn't match expectations (got %v vs want %v)", name, got, want)
 		})
 	}
 }

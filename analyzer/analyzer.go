@@ -27,7 +27,7 @@ type analyzer struct {
 	mu            sync.RWMutex
 	handler       validator
 	err           error
-	diabledNolint bool
+	disabledNolint bool
 
 	found []analysis.Diagnostic
 }
@@ -63,7 +63,7 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 		}
 
 		// 003. Is it allowed to be checked?
-		if !a.diabledNolint && hasDisallowDirective(f.Doc) {
+		if !a.disabledNolint && hasDisallowDirective(f.Doc) {
 			return
 		}
 
@@ -115,7 +115,7 @@ func (a *analyzer) readConfiguration(fs *flag.FlagSet) {
 	// First: checking nonolint directive
 	val := fs.Lookup("nonolint")
 	if val != nil {
-		a.diabledNolint = fs.Lookup("nonolint").Value.String() == "true"
+		a.disabledNolint = fs.Lookup("nonolint").Value.String() == "true"
 	}
 
 	// Second: validators implementation next
