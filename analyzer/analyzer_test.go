@@ -71,7 +71,7 @@ func TestAll(t *testing.T) {
 
 	tests = append(tests, testCase{
 		name: "anonymous Interface/allow",
-		mask: []string{"anonymous_interafce.go", "go.*"},
+		mask: []string{"anonymous_interface.go", "go.*"},
 		meta: map[string]string{
 			"allow": types.NameAnon,
 		},
@@ -80,12 +80,12 @@ func TestAll(t *testing.T) {
 
 	tests = append(tests, testCase{
 		name: "anonymous Interface/reject",
-		mask: []string{"anonymous_interafce.go", "go.*"},
+		mask: []string{"anonymous_interface.go", "go.*"},
 		meta: map[string]string{
 			"reject": types.NameAnon,
 		},
 		want: []string{
-			"NewanonymousInterface returns interface (anonymous interface)",
+			"NewAnonymousInterface returns interface (anonymous interface)",
 		},
 	})
 
@@ -278,7 +278,7 @@ func TestAll(t *testing.T) {
 			"allow": types.NameStdLib, // allow only interfaces from standard library (e.g. io.Writer, fmt.Stringer)
 		},
 		want: []string{
-			"NewanonymousInterface returns interface (anonymous interface)",
+			"NewAnonymousInterface returns interface (anonymous interface)",
 			"dissAllowDirective2 returns interface (interface{})",
 			"dissAllowDirective6 returns interface (interface{})",
 			"fooInterface returns interface (interface{})",
@@ -333,7 +333,7 @@ func TestAll(t *testing.T) {
 			"allow": types.NameGeneric, // allow only generic interfaces
 		},
 		want: []string{
-			"NewanonymousInterface returns interface (anonymous interface)",
+			"NewAnonymousInterface returns interface (anonymous interface)",
 			"dissAllowDirective2 returns interface (interface{})",
 			"dissAllowDirective6 returns interface (interface{})",
 			"fooInterface returns interface (interface{})",
