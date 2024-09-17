@@ -31,7 +31,7 @@ jobs:
             ${{ runner.os }}-go-${{ matrix.golang }}-
 
       - name: GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         with:
           version: v1.18.2
           args: release --clean
