@@ -55,7 +55,7 @@ You can use shorthand for some types of interfaces:
 
 ### Disable directive
 
-`golangci-lint` compliant disable directive `//nolint: ireturn` can be used with `ireturn`
+`golangci-lint` compliant disable directive `//nolint:ireturn` can be used with `ireturn`
 
 ### GitHub Action
 

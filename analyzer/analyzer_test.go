@@ -1,20 +1,17 @@
-//nolint: wrapcheck
-//nolint: exhaustivestruct
-
 package analyzer
 
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/butuzov/ireturn/analyzer/internal/types"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/tools/go/analysis/analysistest"
+
+	"github.com/butuzov/ireturn/analyzer/internal/types"
 )
 
 const testPackageName = "example"
@@ -478,9 +475,9 @@ func (tc testCase) xerox(root string) error {
 func cp(src, dst string) error {
 	if location, err := filepath.Abs(src); err != nil {
 		return err
-	} else if data, err := ioutil.ReadFile(location); err != nil {
+	} else if data, err := os.ReadFile(location); err != nil {
 		return err
-	} else if err := ioutil.WriteFile(filepath.Join(dst, filepath.Base(src)), data, 0o600); err != nil {
+	} else if err := os.WriteFile(filepath.Join(dst, filepath.Base(src)), data, 0o600); err != nil {
 		return err
 	}
 

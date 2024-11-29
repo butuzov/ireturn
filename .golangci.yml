@@ -1,0 +1,23 @@
+linters:
+    enable:
+        - nolintlint
+        - gci
+        - gofumpt
+        - testifylint
+
+linters-settings:
+    nolintlint:
+        allow-unused: false
+        require-specific: true
+    gci:
+        sections:
+            - standard
+            - default
+            - prefix(github.com/butuzov/ireturn)
+
+output:
+    show-stats: true
+    sort-results: true
+    sort-order:
+        - linter
+        - file
