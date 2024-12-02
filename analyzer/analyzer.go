@@ -8,12 +8,12 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/butuzov/ireturn/analyzer/internal/config"
-	"github.com/butuzov/ireturn/analyzer/internal/types"
-
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
+
+	"github.com/butuzov/ireturn/analyzer/internal/config"
+	"github.com/butuzov/ireturn/analyzer/internal/types"
 )
 
 const name string = "ireturn" // linter name
@@ -23,10 +23,10 @@ type validator interface {
 }
 
 type analyzer struct {
-	once          sync.Once
-	mu            sync.RWMutex
-	handler       validator
-	err           error
+	once           sync.Once
+	mu             sync.RWMutex
+	handler        validator
+	err            error
 	disabledNolint bool
 
 	found []analysis.Diagnostic
@@ -128,7 +128,7 @@ func (a *analyzer) readConfiguration(fs *flag.FlagSet) {
 }
 
 func NewAnalyzer() *analysis.Analyzer {
-	a := analyzer{} //nolint: exhaustivestruct
+	a := analyzer{}
 
 	return &analysis.Analyzer{
 		Name:     name,
@@ -196,7 +196,7 @@ func filterInterfaces(p *analysis.Pass, ft *ast.FuncType, di map[string]struct{}
 
 				typeParams := val.String()
 				prefix, suffix := "interface{", "}"
-				if strings.HasPrefix(typeParams, prefix) { // nolint: gosimple
+				if strings.HasPrefix(typeParams, prefix) { //nolint:gosimple
 					typeParams = typeParams[len(prefix):]
 				}
 				if strings.HasSuffix(typeParams, suffix) {

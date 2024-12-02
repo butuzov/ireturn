@@ -57,10 +57,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: lint
-        uses: golangci/golangci-lint-action@v5.3.0
+        uses: golangci/golangci-lint-action@v6
         with:
           version: latest
-          skip-build-cache: true
-          skip-pkg-cache: true
-          args: -D deadcode --skip-dirs "^(cmd|testdata)"
 

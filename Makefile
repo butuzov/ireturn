@@ -14,10 +14,13 @@ tests:
 		-coverprofile=coverage.cov ./...
 
 lints:
-	golangci-lint run --no-config ./... -D deadcode
+	golangci-lint run
 
 cover:
 	go tool cover -html=coverage.cov
+
+generate:
+	scripts/generate-std.sh
 
 install:
 	go install -trimpath -v -ldflags="-w -s" ./cmd/ireturn/
