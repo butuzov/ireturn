@@ -15,14 +15,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        go:
-          - "1.18"
-          - "1.19"
-          - "1.20"
-          - "1.21"
-          - "1.22"
-          - "1.23"
-          - "1.24"
+        go: ["1.23", "1.24", "tip"]
 
     steps:
       - uses: actions/checkout@v4
@@ -44,11 +37,11 @@ jobs:
       - run: make tests
 
       - name: Install goveralls
-        if: matrix.go == '1.22'
+        if: matrix.go == 'tip'
         run: go install github.com/mattn/goveralls@latest
 
       - name: Coverage - Sending Report to Coveral
-        if: matrix.go == '1.22'
+        if: matrix.go == 'tip'
         env:
           COVERALLS_TOKEN: ${{ secrets.github_token }}
         run: goveralls -coverprofile=coverage.cov -service=github
