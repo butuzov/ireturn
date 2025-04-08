@@ -2,7 +2,7 @@
 
 mkdir -p .tmp
 
-tip=22
+tip=24
 
 # create std pkg list
 for i in $(seq 1 $tip); do
