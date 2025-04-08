@@ -11,7 +11,7 @@ Accept Interfaces, Return Concrete Types
 
 ## Install
 
-You can get `ireturn` with `go install` command. Go1.18+ required.
+You can get `ireturn` with `go install` command. Go1.23+ required.
 
 ```shell
 go install github.com/butuzov/ireturn/cmd/ireturn@latest
@@ -25,8 +25,8 @@ Or you can download the suitable binary from the [releases](https://github.com/b
 
 `ireturn` work with two arguments (but allow to use of only one of them in the same moment):
 
-* `accept` - accept-list of the comma-separated interfaces.
-* `reject` - reject-list of the comma-separated interfaces.
+- `accept` - accept-list of the comma-separated interfaces.
+- `reject` - reject-list of the comma-separated interfaces.
 
 By default, `ireturn` will accept all errors (`error`), empty interfaces (`interfaces{}`), anonymous interfaces declarations ( `interface { methodName() }` ) and interfaces from standard library as a valid ones.
 
@@ -47,11 +47,11 @@ ireturn -allow="error,generic,anon,stdlib,.*(or|er)$" ./...
 
 You can use shorthand for some types of interfaces:
 
-* `empty` for `interface{}` type
-* `anon` for anonymous declarations `interface{ someMethod() }`
-* `error` for `error` type
-* `stdlib` for all interfaces from standard library.
-* `generic` for generic interfaces (added in go1.18)
+- `empty` for `interface{}` type
+- `anon` for anonymous declarations `interface{ someMethod() }`
+- `error` for `error` type
+- `stdlib` for all interfaces from standard library.
+- `generic` for generic interfaces (added in go1.18)
 
 ### Disable directive
 
@@ -91,7 +91,8 @@ func (d *IDoer) Do() {/*...*/}
 ```
 
 ## Reading List
-* [Rob Pike's comment on "Accept Interfaces Return Struct in Go"](https://github.com/go-proverbs/go-proverbs.github.io/issues/37)
-* [Accept Interfaces Return Struct in Go](https://mycodesmells.com/post/accept-interfaces-return-struct-in-go)
-* [Accept Interface Return Struct](https://blog.dlow.me/programming/golang/accept-interface-return-struct/)
-* [What “accept interfaces, return structs” means in Go](https://medium.com/@cep21/what-accept-interfaces-return-structs-means-in-go-2fe879e25ee8)
+
+- [Rob Pike's comment on "Accept Interfaces Return Struct in Go"](https://github.com/go-proverbs/go-proverbs.github.io/issues/37)
+- [Accept Interfaces Return Struct in Go](https://mycodesmells.com/post/accept-interfaces-return-struct-in-go)
+- [Accept Interface Return Struct](https://blog.dlow.me/programming/golang/accept-interface-return-struct/)
+- [What “accept interfaces, return structs” means in Go](https://medium.com/@cep21/what-accept-interfaces-return-structs-means-in-go-2fe879e25ee8)
