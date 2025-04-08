@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        go: ["1.23", "1.24", "tip"]
+        go: ["1.23", "1.24"]
 
     steps:
       - uses: actions/checkout@v4
@@ -24,6 +24,8 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go }}
+          cache: true
+          cache-dependency-path: "**/go.sum"
 
       - uses: actions/cache@v4
         if: ${{ !env.ACT }}
@@ -37,11 +39,11 @@ jobs:
       - run: make tests
 
       - name: Install goveralls
-        if: matrix.go == 'tip'
+        if: matrix.go == '1.24'
         run: go install github.com/mattn/goveralls@latest
 
       - name: Coverage - Sending Report to Coveral
-        if: matrix.go == 'tip'
+        if: matrix.go == '1.24'
         env:
           COVERALLS_TOKEN: ${{ secrets.github_token }}
         run: goveralls -coverprofile=coverage.cov -service=github
