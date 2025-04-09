@@ -5,7 +5,6 @@ Accept Interfaces, Return Concrete Types
 ---
 
 [![United 24](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner-personal-page.svg)](https://u24.gov.ua/)
-[![Help Oleg Butuzov](https://raw.githubusercontent.com/butuzov/butuzov/main/personal.svg)](https://github.com/butuzov)
 
 ---
 
