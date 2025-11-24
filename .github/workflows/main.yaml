@@ -18,7 +18,7 @@ jobs:
         go: ["1.23", "1.24"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Go
         uses: actions/setup-go@v5
@@ -51,7 +51,7 @@ jobs:
   GolangCILinter:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: lint
         uses: golangci/golangci-lint-action@v6
         with:
