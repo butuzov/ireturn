@@ -1,4 +1,4 @@
-// Code generated using std.sh; DO NOT EDIT.
+// Code generated using scripts/generate-std.sh; DO NOT EDIT.
 
 // We will ignore that fact that some of packages
 // were removed from stdlib.
