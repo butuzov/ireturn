@@ -2,7 +2,7 @@
 
 mkdir -p .tmp
 
-tip=24
+tip=26
 
 # create std pkg list
 for i in $(seq 1 $tip); do
@@ -15,7 +15,7 @@ done
 
 dest="analyzer/std.go"
 
-echo "// Code generated using std.sh; DO NOT EDIT." > $dest
+echo "// Code generated using generate-std.sh; DO NOT EDIT." > $dest
 echo "" >> $dest
 
 echo "// We will ignore that fact that some of packages" >> $dest
