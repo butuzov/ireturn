@@ -10,7 +10,7 @@ Accept Interfaces, Return Concrete Types
 
 ## Install
 
-You can get `ireturn` with `go install` command. Go1.23+ required.
+You can get `ireturn` with `go install` command. Go1.25+ required.
 
 ```shell
 go install github.com/butuzov/ireturn/cmd/ireturn@latest
