@@ -10,15 +10,16 @@ docker run --rm -it golang:1.${tip}-alpine go list std | grep -v internal | grep
 
 dest="analyzer/std.go"
 
-echo "// Code generated using std.sh; DO NOT EDIT." > $dest
-echo "" >> $dest
+cat > $dest <<EOF
+// Code generated using std.sh; DO NOT EDIT.
 
-echo "// We will ignore that fact that some of packages" >> $dest
-echo "// were removed from stdlib." >> $dest
-echo "" >> $dest
-echo "package analyzer" >> $dest
-echo "" >> $dest
-echo "var std = map[string]struct{}{" >> $dest
+// We will ignore that fact that some of packages
+// were removed from stdlib.
+
+package analyzer
+
+var std = map[string]struct{}{
+EOF
 
 for pkg in $(sort .tmp/go@1.${tip}); do
     printf "\t\"%s\":  {},\n" "$(echo "$pkg" | tr -d \\r)" >> $dest
