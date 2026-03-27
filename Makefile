@@ -1,6 +1,8 @@
 # --- Required ----------------------------------------------------------------
 export PATH   := $(PWD)/bin:$(PATH)                    # ./bin to $PATH
 export SHELL  := bash                                  # Default Shell
+export PKGS   := $(shell go list ./... | tr -s "\n" ",")
+
 
 build:
 	@ go build -trimpath -o bin/ireturn ./cmd/ireturn/
@@ -11,6 +13,7 @@ tests:
 		-parallel=2 \
 		-timeout=1m \
 		-covermode=atomic \
+		-coverpkg="$(PKGS)" \
 		-coverprofile=coverage.cov ./...
 
 lints:
