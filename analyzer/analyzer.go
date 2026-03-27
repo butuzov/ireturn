@@ -18,13 +18,9 @@ import (
 
 const name string = "ireturn" // linter name
 
-type validator interface {
-	IsValid(types.IFace) bool
-}
-
 type analyzer struct {
 	once           sync.Once
-	handler        validator
+	handler        config.Validator
 	err            error
 	disabledNolint bool
 }
@@ -101,13 +97,7 @@ func (a *analyzer) readConfiguration(fs *flag.FlagSet) {
 		a.disabledNolint = fs.Lookup("nonolint").Value.String() == "true"
 	}
 
-	// Second: validators implementation next
-	if validatorImpl, ok := cnf.(validator); ok {
-		a.handler = validatorImpl
-		return
-	}
-
-	a.handler = config.DefaultValidatorConfig()
+	a.handler = cnf
 }
 
 func NewAnalyzer() *analysis.Analyzer {
