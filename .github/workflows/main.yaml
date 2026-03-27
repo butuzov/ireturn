@@ -15,35 +15,27 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        go: ["1.23", "1.24"]
+        go: [oldstable, stable]
 
     steps:
       - uses: actions/checkout@v6
 
       - name: Install Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go }}
           cache: true
           cache-dependency-path: "**/go.sum"
 
-      - uses: actions/cache@v4
-        if: ${{ !env.ACT }}
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ matrix.golang }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-${{ matrix.golang }}-
-
       - run: make build
       - run: make tests
 
       - name: Install goveralls
-        if: matrix.go == '1.24'
+        if: matrix.go == 'stable'
         run: go install github.com/mattn/goveralls@latest
 
       - name: Coverage - Sending Report to Coveral
-        if: matrix.go == '1.24'
+        if: matrix.go == 'stable'
         env:
           COVERALLS_TOKEN: ${{ secrets.github_token }}
         run: goveralls -coverprofile=coverage.cov -service=github
@@ -53,6 +45,6 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v9
         with:
           version: latest

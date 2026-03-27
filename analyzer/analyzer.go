@@ -196,7 +196,7 @@ func filterInterfaces(p *analysis.Pass, ft *ast.FuncType, di map[string]struct{}
 
 				typeParams := val.String()
 				prefix, suffix := "interface{", "}"
-				if strings.HasPrefix(typeParams, prefix) { //nolint:gosimple
+				if strings.HasPrefix(typeParams, prefix) { //nolint:staticcheck
 					typeParams = typeParams[len(prefix):]
 				}
 				if strings.HasSuffix(typeParams, suffix) {
