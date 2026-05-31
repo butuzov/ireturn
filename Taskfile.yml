@@ -1,16 +1,40 @@
-version: '3'
+version: "3"
 
 tasks:
   default:
     sources:
-    - "./**/*.go"
+      - "./**/*.go"
     method: timestamp
     cmds:
-    - clear
-    - make build
-    - ls -lah bin/ireturn
-    # - task: testcase
-    #   vars: {Case: "zero:_Empty_Package_With_No_Issues"}
-    - make tests
-    - make lints
+      - clear
+      - make build
+      - ls -lah bin/ireturn
+      # - task: testcase
+      #   vars: {Case: "zero:_Empty_Package_With_No_Issues"}
+      - task: tests
+      - task: lints
+
   testcase: go test -v -failfast -count=1 -run "TestAll/{{ .Case }}" ./...
+
+  build: go build -trimpath -o ./bin/ireturn ./cmd/ireturn
+
+  lints: |
+    golangci-lint run -v --timeout 5m --no-config ./...
+
+  install: |
+    go install -trimpath -v -ldflags="-w -s" ./cmd/ireturn/
+
+  cover: |
+    go tool cover -html=coverage.cov
+
+  tests: |
+    go test -v -count=1 -race \
+      -failfast \
+      -parallel=2 \
+      -timeout=1m \
+      -covermode=atomic \
+      -coverpkg $(go list ./... | grep -v -E "cmd" | tr "\n" ",") \
+      -coverprofile=coverage.cov ./...
+
+  generate: |
+    scripts/generate-std.sh

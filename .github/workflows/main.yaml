@@ -27,8 +27,10 @@ jobs:
           cache: true
           cache-dependency-path: "**/go.sum"
 
-      - run: make build
-      - run: make tests
+      # ---  🚀 Dev Pipiline -----------------------------------------------------------------------
+      - uses: go-task/setup-task@v2
+      - run: task build
+      - run: task tests
 
       - name: Install goveralls
         if: matrix.go == 'stable'

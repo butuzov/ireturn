@@ -1,4 +1,4 @@
-name: ireturn-linter
+name: ireturn
 description: Runs the Go's ireturn linter that checks for returned interfaces
 author: "@butuzov"
 
@@ -6,11 +6,11 @@ inputs:
   allow:
     required: false
     description: comma-separated list of interfaces, you like to allow
-    default: ''
+    default: ""
   reject:
     required: false
     description: comma-separated list of interfaces, you like to reject
-    default: ''
+    default: ""
 
 runs:
   using: docker
@@ -21,5 +21,5 @@ runs:
     - ./...
 
 branding:
-  icon: 'check-circle'
-  color: 'blue'
+  icon: "check-circle"
+  color: "blue"
