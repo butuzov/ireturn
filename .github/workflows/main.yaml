@@ -29,8 +29,8 @@ jobs:
 
       # ---  🚀 Dev Pipiline -----------------------------------------------------------------------
       - uses: go-task/setup-task@v2
-      - run: make build
-      - run: make tests
+      - run: task build
+      - run: task tests
 
       - name: Install goveralls
         if: matrix.go == 'stable'
