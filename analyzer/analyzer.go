@@ -169,16 +169,11 @@ func filterInterfaces(p *analysis.Pass, ft *ast.FuncType, di map[string]struct{}
 
 				typeParams := val.String()
 				prefix, suffix := "interface{", "}"
-				if strings.HasPrefix(typeParams, prefix) { //nolint:staticcheck
-					typeParams = typeParams[len(prefix):]
-				}
-				if strings.HasSuffix(typeParams, suffix) {
-					typeParams = typeParams[:len(typeParams)-1]
-				}
+				typeParams = strings.TrimPrefix(typeParams, prefix)
+				typeParams = strings.TrimSuffix(typeParams, suffix)
 
-				// todo: write test for this (1.18&1.19 only?)
 				goVersion := runtime.Version()
-				if strings.HasPrefix(goVersion, "go1.18") || strings.HasPrefix(goVersion, "go1.19") {
+				if strings.HasPrefix(goVersion, "go1.18") || strings.HasPrefix(goVersion, "go1.19") { //nolint:gofumpt
 					typeParams = strings.ReplaceAll(typeParams, "|", " | ")
 				}
 
