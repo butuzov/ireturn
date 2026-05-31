@@ -27,6 +27,8 @@ jobs:
           cache: true
           cache-dependency-path: "**/go.sum"
 
+      # ---  🚀 Dev Pipiline -----------------------------------------------------------------------
+      - uses: go-task/setup-task@v2
       - run: make build
       - run: make tests
 
