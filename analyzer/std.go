@@ -217,4 +217,7 @@ var std = map[string]struct{}{
 	"crypto/hpke":            {},
 	"crypto/mlkem/mlkemtest": {},
 	"testing/cryptotest":     {},
+	// added in Go v1.27 in compare to v1.26 (docker image)
+	"crypto/mldsa": {},
+	"uuid":         {},
 }
